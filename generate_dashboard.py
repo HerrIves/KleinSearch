@@ -634,23 +634,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const t = (title || '').toLowerCase();
       // Группа 5 — стандартная IPS (~45-72% NTSC)
       const ipsModels = [
-        /thinkpad\s*t590\b/, /\bt590\b/,
-        /thinkpad\s*p53s\b/, /\bp53s\b/,
-        /latitude\s*5[56]\d\d\b/,
-        /elitebook\s*850\s*g5\b/,
+        /thinkpad\\s*t590\\b/, /\\bt590\\b/,
+        /thinkpad\\s*p53s\\b/, /\\bp53s\\b/,
+        /latitude\\s*5[45]\\d\\d\\b/,        // Dell Latitude 5400-5499, 5500-5599 (5500, 5510, 5520)
+        /latitude\\s*55\\d\\d\\b/,           // fallback для 5500-серии
+        /elitebook\\s*850\\s*g5\\b/,
+        /zbook\\s*15\\s*g[3456]\\b/,        // ZBook 15 G3-G6 (без 'u' — стандартный IPS)
+        /zbook\\s*15\\b(?!\\s*u\\b)/,        // ZBook 15 любой gen без 'u'
       ];
       for (const re of ipsModels) {
         if (re.test(t)) return '<span class="matrix-badge matrix-ips" title="Хорошая корпоративная IPS, ~45-72% NTSC">IPS</span>';
       }
       // Группы 1-4 — 100% sRGB / 72% NTSC
       const premiumModels = [
-        /\b(?:u758|u759|u7510)\b/, /\b(?:h7510|h7511)\b/,
-        /elitebook\s*850\s*g[678]\b/,
-        /zbook\s*15u\b/, /zbook\s*firefly\s*15\b/, /firefly\s*15\b/,
-        /latitude\s*(?:7500|7510|7520)\b/,
-        /xps\s*(?:15\s*)?(?:9570|7590)\b/, /\b(?:9570|7590)\b/,
-        /thinkpad\s*t15g\b/, /thinkpad\s*p15\b(?!\s*s)/,
-        /msi\s*prestige\s*15\b/,
+        /\\b(?:u758|u759|u7510)\\b/, /\\b(?:h7510|h7511)\\b/,
+        /elitebook\\s*850\\s*g[678]\\b/,
+        /elitebook\\s*850\\b/,             // EliteBook 850 без указания поколения → считаем премиум
+        /zbook\\s*15u\\b/, /zbook\\s*firefly\\s*15\\b/, /firefly\\s*15\\b/,
+        /latitude\\s*(?:7500|7510|7520)\\b/,
+        /xps\\s*(?:15\\s*)?(?:9570|7590)\\b/, /\\b(?:9570|7590)\\b/,
+        /thinkpad\\s*t15g\\b/, /thinkpad\\s*p15\\b(?!\\s*s)/,
+        /msi\\s*prestige\\s*15\\b/,
       ];
       for (const re of premiumModels) {
         if (re.test(t)) return '<span class="matrix-badge matrix-premium" title="100% sRGB / 72% NTSC, 300-500 нит">★ 100% sRGB</span>';
@@ -658,13 +662,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return '';
     }
 
+
+
     function parseNumericPrice(str) {
       if (!str) return 0;
       if (str.toLowerCase().includes('zu verschenken')) return 0;
-      const match = str.match(/(\\d+(?:[.,]\\d+)?)/);
+      // Немецкий формат: 1.200 € или 1.200,50 € → тысячи через точку, копейки через запятую
+      // Захватываем: необязательные цифры с точками-разделителями тысяч, затем необязательную запятую с центами
+      const match = str.match(/(\d{1,3}(?:\.\d{3})*(?:,\d+)?|\d+(?:,\d+)?)/);
+
       if (!match) return 9999;
-      return parseFloat(match[1].replace('.', '').replace(',', '.'));
+      // Убираем точки-разделители тысяч, заменяем запятую на точку для parseFloat
+      return parseFloat(match[1].replace(/\./g, '').replace(',', '.'));
     }
+
+
 
     // ========================================================
     // FILE SYSTEM ACCESS API (Прямая запись в donor_listings.csv)

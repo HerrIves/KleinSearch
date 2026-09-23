@@ -21,6 +21,7 @@ if sys.stderr and hasattr(sys.stderr, "reconfigure"):
 DEFAULT_MAX_PRICE = 125  # Строго до 125 евро
 BROWSER_PROFILE_DIR = r"c:\work\browser_profile"  # Постоянный профиль для сохранения куки и сессий
 CSV_DATABASE_PATH = r"c:\work\donor_listings.csv"  # Таблица найденных объявлений
+MAX_PAGES = 3           # Максимальное количество страниц результатов на один запрос
 
 
 
@@ -211,12 +212,19 @@ STORAGE_PATTERNS = [
 ]
 
 
-def make_search_url(query: str, max_price: int = DEFAULT_MAX_PRICE) -> str:
-    """Генерирует правильный URL поиска Kleinanzeigen с ключевым словом и лимитом цены."""
+
+def make_search_url(query: str, max_price: int = DEFAULT_MAX_PRICE, page: int = 1) -> str:
+    """Генерирует правильный URL поиска Kleinanzeigen с ключевым словом, лимитом цены и номером страницы."""
     slug = urllib.parse.quote(query.strip().lower().replace(" ", "-"))
-    if max_price:
-        return f"https://www.kleinanzeigen.de/s-notebooks/preis::{max_price}/{slug}/k0c278"
-    return f"https://www.kleinanzeigen.de/s-notebooks/{slug}/k0c278"
+    base = (
+        f"https://www.kleinanzeigen.de/s-notebooks/preis::{max_price}/{slug}/k0c278"
+        if max_price else
+        f"https://www.kleinanzeigen.de/s-notebooks/{slug}/k0c278"
+    )
+    if page > 1:
+        return f"{base}?pageNum={page}"
+    return base
+
 
 def parse_price_value(price_str: str) -> float | None:
     """Извлекает числовое значение цены из строки."""
@@ -599,17 +607,114 @@ async def scan_url(page, url: str) -> list:
     html = await page.content()
     return parse_listings_from_html(html)
 
+
+async def scan_query(page, query: str, max_pages: int = MAX_PAGES) -> list:
+    """Сканирует несколько страниц результатов по одному поисковому запросу."""
+    all_results = []
+    for page_num in range(1, max_pages + 1):
+        url = make_search_url(query, DEFAULT_MAX_PRICE, page=page_num)
+        try:
+            results = await scan_url(page, url)
+        except Exception as e:
+            print(f"  ⚠ Ошибка на странице {page_num}: {e}")
+            break
+
+        if not results:
+            # Пустая страница — дальше листать нет смысла
+            print(f"  ↩ Стр. {page_num}: объявлений не найдено, прекращаем пагинацию")
+            break
+
+        all_results.extend(results)
+        print(f"  ✓ Стр. {page_num}: найдено {len(results)} объявлений (всего: {len(all_results)})")
+
+        # Если страница содержала меньше 10 объявлений — скорее всего последняя
+        if len(results) < 10:
+            print(f"  ↩ Стр. {page_num}: мало объявлений ({len(results)} < 10), пагинация завершена")
+            break
+
+        if page_num < max_pages:
+            jitter = random.uniform(2.0, 4.0)
+            await page.wait_for_timeout(int(jitter * 1000))
+
+    return all_results
+
+
+
+def clean_db(csv_path: str = CSV_DATABASE_PATH) -> None:
+    """Ретроспективно проверяет все записи в базе через evaluate_listing().
+    Записи, которые не прошли бы текущие фильтры, помечаются статусом REJECTED.
+    Пользовательские примечания и вся история сохраняются."""
+    if not os.path.exists(csv_path):
+        print("Файл базы не найден.")
+        return
+
+    fieldnames = [
+        "Дата добавления", "Статус", "Модель / Заголовок", "Цена",
+        "SSD 512GB", "Местоположение", "Доставка", "Комментарий", "Ссылка", "ID"
+    ]
+
+    rows = []
+    with open(csv_path, mode="r", encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f, delimiter=";")
+        for r in reader:
+            rows.append(r)
+
+    changed = 0
+    for row in rows:
+        if row.get("Статус") == "REJECTED":
+            continue
+        dummy = {
+            "id": row.get("ID", ""),
+            "title": row.get("Модель / Заголовок", ""),
+            "description": "",
+            "price": row.get("Цена", ""),
+            "location": row.get("Местоположение", ""),
+            "shipping": row.get("Доставка", ""),
+            "link": row.get("Ссылка", ""),
+        }
+        result = evaluate_listing(dummy)
+        if result["status"] == "REJECTED":
+            old_status = row["Статус"]
+            row["Статус"] = "REJECTED"
+            row["Комментарий"] = f"[clean-db] Отклонено текущими фильтрами: {result['reason']}"
+            print(f"  ⚠ REJECTED: «{row['Модель / Заголовок']}» (было: {old_status}) — {result['reason']}")
+            changed += 1
+
+    with open(csv_path, mode="w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=";")
+        writer.writeheader()
+        writer.writerows(rows)
+
+    print(f"\n✅ clean-db завершён: помечено REJECTED — {changed} записей (всего в базе: {len(rows)})")
+
+
 async def main():
+    args = sys.argv[1:]
+
+    # Режим аудита базы (без браузера)
+    if args and args[0].lower() == "--clean-db":
+        print("=" * 70)
+        print(" АУДИТ БАЗЫ: проверка записей через текущие фильтры")
+        print("=" * 70)
+        clean_db()
+        try:
+            from generate_dashboard import generate_dashboard
+            generate_dashboard()
+            print("🌐 HTML-страница обновлена: c:\\work\\index.html")
+        except Exception as e:
+            print(f"Предупреждение: {e}")
+        return
+
     targets = TARGET_QUERIES
-    if len(sys.argv) > 1:
-        arg = " ".join(sys.argv[1:]).strip()
+    if args:
+        arg = " ".join(args).strip()
         if arg.lower() not in ["all", "--all"]:
             targets = [{"name": arg, "query": arg}]
 
     print("=" * 70)
     print(" СКАНЕР ДОНОРОВ ДЛЯ ThinkPad P15 Gen 2 (15.6\" FHD Slim + 512GB SSD)")
     print("=" * 70)
-    print(f"Макс. цена: {DEFAULT_MAX_PRICE} €")
+    print(f"Макс. цена: {DEFAULT_MAX_PRICE} €  |  Страниц на запрос: {MAX_PAGES}")
     print(f"Целевые запросы ({len(targets)}): {', '.join(q['name'] for q in targets)}")
     print(f"Профиль браузера: {BROWSER_PROFILE_DIR} (сессии/куки сохраняются)")
     print("-" * 70)
@@ -646,9 +751,9 @@ async def main():
         page = context.pages[0] if context.pages else await context.new_page()
 
         for target in targets:
-            query_url = make_search_url(target["query"], DEFAULT_MAX_PRICE)
+            print(f"\n📋 Запрос: {target['name']}")
             try:
-                listings = await scan_url(page, query_url)
+                listings = await scan_query(page, target["query"])
             except Exception as e:
                 print(f"Ошибка при сканировании {target['name']}: {e}")
                 continue
@@ -665,9 +770,11 @@ async def main():
                 else:
                     rejected_count += 1
 
-            # Случайная человеческая задержка между поисковыми запросами (2-4 сек)
-            jitter = random.uniform(2.0, 4.0)
-            await page.wait_for_timeout(int(jitter * 1000))
+            # Задержка между поисковыми запросами (уже включена внутри scan_query между страницами,
+            # но здесь добавляем дополнительную паузу перед следующим ключевым словом)
+            if target != targets[-1]:
+                jitter = random.uniform(1.5, 3.0)
+                await page.wait_for_timeout(int(jitter * 1000))
 
         print("\n" + "=" * 70)
         print(" РЕЗУЛЬТАТЫ СКАНИРОВАНИЯ")
