@@ -1,17 +1,32 @@
-# Python
+# Environments
+.env
+.venv/
+env/
+venv/
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-.Python
-*.egg-info/
+*$py.class
 
-# Browser profile (большой, не нужен в гите)
-browser_profile/
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# Backups
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Application Data & Generated Files
+data/*.json
+data/*.csv
+data/browser_profile/
 backups/
+index.html
 
-# Временные файлы
-*.tmp
+# Logs and tmp
 *.log
+*.tmp
