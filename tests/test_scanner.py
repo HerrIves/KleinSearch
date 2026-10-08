@@ -164,6 +164,12 @@ class TestEvaluateListing:
         result = evaluate_listing(item)
         assert result["status"] == "REJECTED"
 
+    def test_accepted_price_at_new_limit(self):
+        """150 € — новый предел, объявление должно проходить."""
+        item = make_item("Fujitsu Lifebook U759 i5 16GB Laptop", price="150 €")
+        result = evaluate_listing(item)
+        assert result["status"] in ("MATCH", "POTENTIAL")
+
     def test_rejected_low_resolution_hd(self):
         item = make_item("Fujitsu Lifebook U759 HD Display 1366x768")
         result = evaluate_listing(item)

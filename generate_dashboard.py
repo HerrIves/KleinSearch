@@ -543,7 +543,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           </button>
         </div>
       </div>
-      <p class="subtitle">Матрица: 15.6" Slim FHD (30-pin eDP без ушек) • 100% sRGB / 72% NTSC (≥300–500 нит) • Без 4K/UHD • Бюджет до 125 €</p>
+      <p class="subtitle">Матрица: 15.6" Slim FHD (30-pin eDP без ушек) • 100% sRGB / 72% NTSC (≥300–500 нит) • Без 4K/UHD • Бюджет до 150 €</p>
     </header>
 
     <div class="stats-grid">
@@ -561,7 +561,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </div>
       <div class="stat-card">
         <div class="stat-label">💰 Бюджет</div>
-        <div class="stat-value">≤ 125 €</div>
+        <div class="stat-value">≤ 150 €</div>
       </div>
     </div>
 

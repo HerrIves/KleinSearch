@@ -18,7 +18,7 @@ if sys.stderr and hasattr(sys.stderr, "reconfigure"):
 # КОНФИГУРАЦИЯ ТРЕБОВАНИЙ (ThinkPad P15 Gen 2)
 # ==========================================
 
-DEFAULT_MAX_PRICE = 125  # Строго до 125 евро
+DEFAULT_MAX_PRICE = 150  # Строго до 150 евро
 BROWSER_PROFILE_DIR = r"c:\work\browser_profile"  # Постоянный профиль для сохранения куки и сессий
 CSV_DATABASE_PATH = r"c:\work\donor_listings.csv"  # Таблица найденных объявлений
 MAX_PAGES = 3           # Максимальное количество страниц результатов на один запрос
@@ -169,14 +169,15 @@ AD_STATUS_STOPWORDS = [
 ]
 
 # 6. Отдельные запчасти без матрицы
-SPARE_PARTS_WITHOUT_SCREEN = [
+# 6. Отдельные запчасти без матрицы — два уровня строгости:
+
+# 6а. СТРОГИЕ стоп-слова: никогда не упоминаются как «аксессуар в комплекте» у целого ноутбука.
+#     Отклоняем если есть в заголовке (кроме случаев наличия экрана в заголовке).
+SPARE_PARTS_STRICT = [
     r"tastatur\w*",
     r"keyboard\w*",
     r"\b(?:mainboard|motherboard)\b",
-    r"\b(?:akku|batterie)\b",
-    r"\b(?:netzteil|ladekabel|charger|stromkabel)\b",
     r"\b(?:unterer\s*deckel|bodendeckel|bodenplatte|unterteil|unterseite|gehäusedeckel|bottom\s*base|backplate)\b",
-    r"\b(?:docking[- ]?station|portreplikator|dock)\b",
     r"\b(?:wlan|bluetooth)[- ]?board\b",
     r"lautsprecher\w*",
     r"speaker\w*",
@@ -186,8 +187,17 @@ SPARE_PARTS_WITHOUT_SCREEN = [
     r"\b(?:subboard|daughterboard|platine)\b",
     r"scharnier\w*",
     r"\b(?:displayblende|displayrahmen)\b",
-    r"\bersatzteile\b",    # "Ersatzteile" — запчасти
-    r"\bteile\b",          # "Teile" — части/запчасти
+    r"\bersatzteile\b",    # «Ersatzteile» — запчасти
+    r"\bteile\b",          # «Teile» — части/запчасти
+]
+
+# 6б. КОНТЕКСТНЫЕ стоп-слова: могут означать «входит в комплект» ("mit Akku", "mit Dockingstation").
+#     Используем позиционную проверку: отклоняем только если название ноутбука
+#     НЕ стоит до стоп-слова в заголовке.
+SPARE_PARTS_CONTEXT = [
+    r"\b(?:akku|batterie)\b",
+    r"\b(?:netzteil|ladekabel|charger|stromkabel)\b",
+    r"\b(?:docking[- ]?station|portreplikator|dock)\b",
     r"\bpalmrest\b",       # Подставка для ладони
 ]
 
@@ -293,12 +303,33 @@ def evaluate_listing(item: dict) -> dict:
             return item
 
     # 6. Отсеивание отдельных мелких запчастей без матрицы (клавиатура, кулер, плата и т.п.)
+    # Если в заголовке упоминается экран — это явно не "только запчасть"
     has_screen_core = bool(re.search(r"\b(?:display|bildschirm|matrix|panel|lcd|screen)\b", title_lower))
-    for sp in SPARE_PARTS_WITHOUT_SCREEN:
-        if re.search(sp, title_lower):
-            if not has_screen_core:
+
+    # 6а. СТРОГИЕ — клавиатура, вентилятор, материнка и т.п. никогда не бывают «в комплекте»
+    if not has_screen_core:
+        for sp in SPARE_PARTS_STRICT:
+            if re.search(sp, title_lower):
                 item["status"] = "REJECTED"
-                item["reason"] = "Запчасть/аксессуар без матрицы (динамики, док, петли, плата)"
+                item["reason"] = "Запчасть/аксессуар без матрицы (динамики, клавиатура, плата и т.п.)"
+                return item
+
+    # 6б. КОНТЕКСТНЫЕ — Akku/Netzteil/Dock могут означать «входит в комплект».
+    #     Отклоняем только если слово-запчасть стоит ДО названия ноутбука в заголовке.
+    _laptop_brand_re = re.compile(
+        r"\b(?:lifebook|elitebook|zbook|thinkpad|latitude|xps|prestige|precision|probook"
+        r"|notebook|laptop)\b"
+    )
+    if not has_screen_core:
+        for sp in SPARE_PARTS_CONTEXT:
+            sp_match = re.search(sp, title_lower)
+            if not sp_match:
+                continue
+            spare_pos = sp_match.start()
+            laptop_before_spare = _laptop_brand_re.search(title_lower[:spare_pos])
+            if not laptop_before_spare:
+                item["status"] = "REJECTED"
+                item["reason"] = "Запчасть/аксессуар без матрицы (аккумулятор, зарядка, dok)"
                 return item
 
     # 7. Проверка белого списка моделей
