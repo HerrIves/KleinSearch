@@ -55,3 +55,6 @@ When the application starts, it will automatically open `index.html` in your def
 
 ## 📝 License
 This project is licensed under the MIT License.
+
+## 🤖 Acknowledgments
+Built collaboratively in a pair-programming session with an AI coding assistant. 🚀
