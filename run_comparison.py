@@ -15,10 +15,10 @@ if sys.stderr and hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
 DEFAULT_MAX_PRICE = 100
-BROWSER_PROFILE_DIR = r"c:\work\browser_profile"
-OLD_CSV_PATH = r"c:\work\listings_old_variant.csv"
-NEW_CSV_PATH = r"c:\work\listings_new_variant.csv"
-EXISTING_DB_PATH = r"c:\work\donor_listings.csv"
+BROWSER_PROFILE_DIR = "browser_profile"
+OLD_CSV_PATH = "listings_old_variant.csv"
+NEW_CSV_PATH = "listings_new_variant.csv"
+EXISTING_DB_PATH = "donor_listings.csv"
 
 # ==========================================
 # 1. ЗАПРОСЫ ДЛЯ СТАРОГО И НОВОГО ВАРИАНТОВ

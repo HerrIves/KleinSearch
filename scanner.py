@@ -19,8 +19,8 @@ if sys.stderr and hasattr(sys.stderr, "reconfigure"):
 # ==========================================
 
 DEFAULT_MAX_PRICE = 150  # Строго до 150 евро
-BROWSER_PROFILE_DIR = r"c:\work\browser_profile"  # Постоянный профиль для сохранения куки и сессий
-CSV_DATABASE_PATH = r"c:\work\donor_listings.csv"  # Таблица найденных объявлений
+BROWSER_PROFILE_DIR = "browser_profile"  # Постоянный профиль для сохранения куки и сессий
+CSV_DATABASE_PATH = "donor_listings.csv"  # Таблица найденных объявлений
 MAX_PAGES = 3           # Максимальное количество страниц результатов на один запрос
 
 
@@ -731,7 +731,7 @@ async def main():
         try:
             from generate_dashboard import generate_dashboard
             generate_dashboard()
-            print("🌐 HTML-страница обновлена: c:\\work\\index.html")
+            print("🌐 HTML-страница обновлена: index.html")
         except Exception as e:
             print(f"Предупреждение: {e}")
         return
@@ -846,7 +846,7 @@ async def main():
         try:
             from generate_dashboard import generate_dashboard
             generate_dashboard()
-            print("🌐 HTML-страница обновлена: c:\\work\\index.html")
+            print("🌐 HTML-страница обновлена: index.html")
         except Exception as e:
             print(f"Предупреждение: ошибка обновления HTML-витрины: {e}")
         print("=" * 70)

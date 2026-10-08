@@ -8,8 +8,8 @@ if sys.stdout and hasattr(sys.stdout, "reconfigure"):
 if sys.stderr and hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
-CSV_DATABASE_PATH = r"c:\work\donor_listings.csv"
-HTML_DASHBOARD_PATH = r"c:\work\index.html"
+CSV_DATABASE_PATH = "donor_listings.csv"
+HTML_DASHBOARD_PATH = "index.html"
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="ru">
