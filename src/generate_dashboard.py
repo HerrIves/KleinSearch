@@ -46,7 +46,7 @@ def generate_dashboard(
     settings: Optional[Dict[str, Any]] = None,
 ) -> str:
     settings = settings if settings is not None else config.load_settings()
-    listings = [l.to_dict() for l in load_listings(csv_path)]
+    listings = [item.to_dict() for item in load_listings(csv_path)]
     html = render_dashboard(listings, settings)
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html)

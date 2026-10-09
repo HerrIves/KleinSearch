@@ -14,7 +14,7 @@ def test_upsert_adds_only_match_and_partial(tmp_path):
         [_ad(1), _ad(2, "PARTIAL", missing=["32gb"]), _ad(3, "REJECTED")], path, now="2026-01-01 10:00"
     )
     assert (added, total) == (2, 2)
-    stored = {l.id: l for l in storage.load_listings(path)}
+    stored = {item.id: item for item in storage.load_listings(path)}
     assert stored["2"].missing == ["32gb"]
     assert stored["1"].added_at == "2026-01-01 10:00"
 
@@ -40,7 +40,7 @@ def test_save_note_unknown_id(tmp_path):
 
 def test_file_is_excel_friendly(tmp_path):
     path = tmp_path / "l.csv"
-    storage.upsert_listings([_ad(1, title_extra := None) if False else _ad(1)], str(path))
+    storage.upsert_listings([_ad(1)], str(path))
     raw = path.read_bytes()
     assert raw.startswith(b"\xef\xbb\xbf")  # BOM
     assert b";" in raw.splitlines()[0]
@@ -59,7 +59,7 @@ def test_reevaluate_removes_now_excluded(tmp_path):
     settings = {"global_exclude": [], "profiles": [{"name": "Mac", "must_have": ["32gb"], "exclude": ["defekt"]}]}
     updated, removed = storage.reevaluate(settings, path)
     assert (updated, removed) == (1, 1)
-    stored = {l.id: l for l in storage.load_listings(path)}
+    stored = {item.id: item for item in storage.load_listings(path)}
     assert stored["1"].status == "MATCH"
     assert "2" not in stored
     assert "3" in stored  # unknown profile: kept untouched
@@ -76,7 +76,7 @@ def test_migrate_legacy_csv(tmp_path):
         w.writerow(["2026-09-01 10:00", "POTENTIAL", "ThinkPad T590", "140 €", "Уточнить", "Не указано", "Только самовывоз", "", "https://x/2", "2"])
         w.writerow(["2026-09-01 10:00", "REJECTED", "junk", "1 €", "", "", "", "", "https://x/3", "3"])
     assert storage.migrate_legacy_csv(str(legacy), str(new)) == 2
-    rows = {l.id: l for l in storage.load_listings(str(new))}
+    rows = {item.id: item for item in storage.load_listings(str(new))}
     assert rows["1"].status == "MATCH" and rows["1"].note == "my note"
     assert rows["1"].shipping == "Shipping possible" and rows["1"].location == "Berlin"
     assert rows["2"].status == "PARTIAL" and rows["2"].location == "Unknown"

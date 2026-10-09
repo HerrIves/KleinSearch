@@ -3,7 +3,8 @@
 A powerful, headless, profile-driven scraping engine and local dashboard for monitoring items on Kleinanzeigen (formerly eBay Kleinanzeigen).
 
 ![KleinSearch Dashboard](https://img.shields.io/badge/UI-Interactive_Dashboard-0ea5e9)
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+[![CI](https://github.com/HerrIves/KleinSearch/actions/workflows/ci.yml/badge.svg)](https://github.com/HerrIves/KleinSearch/actions/workflows/ci.yml)
 ![Playwright](https://img.shields.io/badge/Playwright-Headless-green)
 ![License](https://img.shields.io/badge/License-MIT-gray)
 

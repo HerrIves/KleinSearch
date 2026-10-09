@@ -88,7 +88,7 @@ def load_listings(path: str = CSV_DATABASE_PATH) -> List[Listing]:
 
 
 def save_listings(listings: Iterable[Listing], path: str = CSV_DATABASE_PATH) -> None:
-    _write_csv((l.to_csv_row() for l in listings), path)
+    _write_csv((listing.to_csv_row() for listing in listings), path)
 
 
 def _sort_key(listing: Listing) -> Tuple[str, int]:
@@ -103,7 +103,7 @@ def upsert_listings(
     """Adds new MATCH/PARTIAL listings and refreshes known ones (keeps user notes and added_at).
     Returns (added, total)."""
     existing = load_listings(path)
-    by_key = {l.key: l for l in existing if l.key}
+    by_key = {item.key: item for item in existing if item.key}
     now = now or datetime.now().strftime("%Y-%m-%d %H:%M")
     added = 0
 
