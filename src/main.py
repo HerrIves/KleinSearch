@@ -1,10 +1,12 @@
 """Entry point.
 
   python src/main.py              open the dashboard window (settings, Start scan, progress)
-  python src/main.py --no-ui      scan all enabled profiles in the console
+  python src/main.py --no-ui      scan all enabled profiles once in the console
+  python src/main.py --loop [min] scan continuously every N minutes (default 60)
   python src/main.py --clean-db   re-check stored listings against current profiles
 """
 import asyncio
+import os
 import random
 import sys
 from pathlib import Path
@@ -231,13 +233,58 @@ async def run_console() -> None:
     logger.info(f"Dashboard updated: {config.HTML_DASHBOARD_PATH}")
 
 
+def _parse_loop_interval(args: List[str]) -> Optional[int]:
+    """Returns loop interval in minutes if --loop or --interval is requested, or env SCAN_INTERVAL_MINUTES."""
+    interval = None
+    for flag in ("--loop", "--interval"):
+        if flag in args:
+            idx = args.index(flag)
+            if idx + 1 < len(args) and args[idx + 1].isdigit():
+                interval = int(args[idx + 1])
+            else:
+                interval = 60
+            break
+
+    if interval is None and "--no-ui" in args:
+        env_val = os.environ.get("SCAN_INTERVAL_MINUTES")
+        if env_val and env_val.isdigit():
+            interval = int(env_val)
+
+    return interval
+
+
+async def run_loop(interval_minutes: int) -> None:
+    """Continuously runs console scans with an interval between runs."""
+    logger.info(f"Starting continuous scan loop (interval: {interval_minutes}m). Press Ctrl+C to stop.")
+    while True:
+        try:
+            logger.info("Executing scheduled scan...")
+            await run_console()
+        except asyncio.CancelledError:
+            logger.info("Scan loop cancelled.")
+            break
+        except Exception as e:
+            logger.error(f"Scan iteration failed: {e}")
+
+        logger.info(f"Scan cycle finished. Next run in {interval_minutes} minutes.")
+        try:
+            await asyncio.sleep(interval_minutes * 60)
+        except asyncio.CancelledError:
+            logger.info("Scan loop interrupted.")
+            break
+
+
 def main(argv: Optional[List[str]] = None) -> None:
     args = sys.argv[1:] if argv is None else argv
     storage.migrate_legacy_csv()
+    interval = _parse_loop_interval(args)
+
     if "--clean-db" in args:
         updated, removed = storage.reevaluate(config.load_settings())
         logger.info(f"clean-db: {updated} updated, {removed} removed")
         generate_dashboard(settings=config.load_settings())
+    elif interval is not None:
+        asyncio.run(run_loop(interval))
     elif "--no-ui" in args:
         asyncio.run(run_console())
     else:

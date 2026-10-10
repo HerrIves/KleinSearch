@@ -51,6 +51,15 @@ def generate_dashboard(
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html)
     logger.info(f"Dashboard written: {html_path} ({len(listings)} listings)")
+
+    # Also save a copy inside data/ directory for single-volume Docker deployments
+    data_html = os.path.join(config.DATA_DIR, "index.html")
+    if os.path.abspath(html_path) != os.path.abspath(data_html):
+        try:
+            with open(data_html, "w", encoding="utf-8") as f:
+                f.write(html)
+        except OSError:
+            pass
     return html_path
 
 

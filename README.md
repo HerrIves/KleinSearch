@@ -6,6 +6,7 @@ A powerful, headless, profile-driven scraping engine and local dashboard for mon
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 [![CI](https://github.com/HerrIves/KleinSearch/actions/workflows/ci.yml/badge.svg)](https://github.com/HerrIves/KleinSearch/actions/workflows/ci.yml)
 ![Playwright](https://img.shields.io/badge/Playwright-Headless-green)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ed)
 ![License](https://img.shields.io/badge/License-MIT-gray)
 
 ## ✨ Features
@@ -20,19 +21,20 @@ A powerful, headless, profile-driven scraping engine and local dashboard for mon
 - **Local Storage:** All your data remains private and stored in standard `.csv` files.
 - **Smart Reevaluation:** Whenever you update your profile rules (like adding an exclusion word), the local database is automatically cleaned up.
 - **Telegram Notifications:** Instant alerts sent to your Telegram chat as soon as new matching ads are detected (with built-in deduplication).
+- **Docker Ready:** 1-click deployment with `docker-compose` for 24/7 autonomous monitoring on a VPS or home server.
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Local Desktop)
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/kleinanzeigen-scout.git
-cd kleinanzeigen-scout
+git clone https://github.com/HerrIves/KleinSearch.git
+cd KleinSearch
 ```
 
 ### 2. Run the App
 
-The project comes with automated setup scripts that will dynamically create a Python virtual environment, install dependencies, and launch the application.
+The project comes with automated setup scripts that dynamically create a Python virtual environment, install dependencies, and launch the application.
 
 **Windows:**
 ```cmd
@@ -51,10 +53,38 @@ When the application starts, it will automatically open `index.html` in your def
 - **Telegram Alerts (📩):** Enter your Bot Token and Chat ID in Settings to get instant notifications when deals appear.
 - You can manage notes directly on the listings inside the UI.
 
+---
+
+## 🐳 Docker Deployment (24/7 Server Monitoring)
+
+Run KleinSearch autonomously on a VPS, Synology NAS, Raspberry Pi, or home server:
+
+### 1. Start with Docker Compose
+
+```bash
+docker compose up -d
+```
+
+### 2. Configure Scans and Telegram
+
+The container mounts `./data` on the host machine. You can configure:
+- **`data/config.json`**: Edit search profiles and exclusion rules directly (changes are automatically picked up on each scan cycle).
+- **Scan Interval**: Set the environment variable `SCAN_INTERVAL_MINUTES` in `docker-compose.yml` (default is 60 minutes).
+- **Dashboard & Results**: Findings are persisted in `data/listings.csv` and rendered to `data/index.html`.
+
+### 3. View Realtime Logs
+
+```bash
+docker compose logs -f
+```
+
+---
+
 ## 🛠️ Tech Stack
 - **Backend:** Python (Asyncio, Playwright, BeautifulSoup)
 - **Frontend:** Vanilla JS, CSS (Serverless local HTML architecture)
-- **Testing:** Pytest
+- **Deployment:** Docker & Docker Compose
+- **Testing:** Pytest & Ruff
 
 ## 📝 License
 This project is licensed under the MIT License.

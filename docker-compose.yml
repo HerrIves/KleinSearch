@@ -1,0 +1,14 @@
+services:
+  kleinsearch:
+    build: .
+    container_name: kleinsearch
+    restart: unless-stopped
+    environment:
+      # Frequency of scans in minutes (default: 60)
+      - SCAN_INTERVAL_MINUTES=60
+      # Optional environment variable overrides for Telegram:
+      # - TELEGRAM_BOT_TOKEN=your_bot_token_here
+      # - TELEGRAM_CHAT_ID=your_chat_id_here
+    volumes:
+      # Persist configuration, search profiles, CSV database, and Telegram state
+      - ./data:/app/data
