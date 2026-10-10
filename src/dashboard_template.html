@@ -282,6 +282,29 @@
         Advanced: <code>re:</code> prefix for a regular expression.
         All “must have” found → <b>MATCH</b>, some missing → <b>PARTIAL</b> (missing ones are shown).
       </p>
+      <div class="field global-row" style="margin-top: 16px; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label style="margin: 0; font-weight: 600; font-size: 0.95rem;">📩 Telegram notifications</label>
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem; color: var(--text);">
+            <input type="checkbox" id="tgEnabled"> Enable
+          </label>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+          <div>
+            <label for="tgBotToken" style="font-size: 0.75rem; color: var(--text-muted);">Bot Token</label>
+            <input type="password" id="tgBotToken" placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11">
+          </div>
+          <div>
+            <label for="tgChatId" style="font-size: 0.75rem; color: var(--text-muted);">Chat ID</label>
+            <input type="text" id="tgChatId" placeholder="123456789">
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 8px;">
+          <p class="help" style="margin: 0;">Alerts you immediately when a new matching ad is found.</p>
+          <button class="btn btn-ghost btn-sm" id="btnTestTelegram" type="button" style="border: 1px solid var(--border);">🔔 Test Telegram</button>
+        </div>
+        <span id="tgTestStatus" class="save-state" style="margin-top: 6px; display: inline-block;"></span>
+      </div>
       <div class="settings-actions">
         <button class="btn btn-primary" id="btnSaveSettings" type="button">💾 Save</button>
         <button class="btn btn-outline" id="btnSettingsScan" type="button" style="display:none; color: #38bdf8; border-color: #38bdf8;">▶️ Start Scan</button>
@@ -596,6 +619,11 @@
 
     function renderSettings() {
       document.getElementById('globalExclude').value = (draft.global_exclude || []).join(', ');
+      const tg = draft.telegram || {};
+      document.getElementById('tgEnabled').checked = Boolean(tg.enabled);
+      document.getElementById('tgBotToken').value = tg.bot_token || '';
+      document.getElementById('tgChatId').value = tg.chat_id || '';
+      document.getElementById('tgTestStatus').textContent = '';
       const container = document.getElementById('profiles');
       container.innerHTML = draft.profiles.length
         ? draft.profiles.map(profileCardHtml).join('')
@@ -605,6 +633,12 @@
     function readSettingsForm() {
       const cards = [...document.querySelectorAll('.profile-card')];
       draft.global_exclude = document.getElementById('globalExclude').value.split(',').map(s => s.trim()).filter(Boolean);
+      draft.telegram = {
+        enabled: document.getElementById('tgEnabled').checked,
+        bot_token: document.getElementById('tgBotToken').value.trim(),
+        chat_id: document.getElementById('tgChatId').value.trim(),
+        notify_on: (draft.telegram && draft.telegram.notify_on) || ['MATCH'],
+      };
       draft.profiles = cards.map(card => {
         const get = f => card.querySelector(`[data-f="${f}"]`);
         const num = f => get(f).value === '' ? null : Number(get(f).value);
@@ -668,6 +702,36 @@
     document.getElementById('btnCancelSettings').addEventListener('click', closeSettings);
     document.getElementById('btnSaveSettings').addEventListener('click', saveSettings);
     document.getElementById('btnSettingsScan').addEventListener('click', () => document.getElementById('btnStartScan').click());
+    document.getElementById('btnTestTelegram').addEventListener('click', async () => {
+      const statusEl = document.getElementById('tgTestStatus');
+      const token = document.getElementById('tgBotToken').value.trim();
+      const chatId = document.getElementById('tgChatId').value.trim();
+      if (!token || !chatId) {
+        statusEl.className = 'save-state err';
+        statusEl.textContent = 'Please enter both Bot Token and Chat ID first.';
+        return;
+      }
+      if (typeof window.ka_test_telegram !== 'function') {
+        statusEl.className = 'save-state err';
+        statusEl.textContent = 'Read-only mode: launch app via run.bat to test Telegram.';
+        return;
+      }
+      statusEl.className = 'save-state';
+      statusEl.textContent = 'Sending test message…';
+      try {
+        const res = await window.ka_test_telegram(token, chatId);
+        if (res && res.ok) {
+          statusEl.className = 'save-state ok';
+          statusEl.textContent = '✓ Test alert sent! Check your Telegram.';
+        } else {
+          statusEl.className = 'save-state err';
+          statusEl.textContent = 'Telegram error: ' + (res ? res.message : 'Unknown error');
+        }
+      } catch (err) {
+        statusEl.className = 'save-state err';
+        statusEl.textContent = 'Error: ' + (err && err.message ? err.message : err);
+      }
+    });
     document.getElementById('btnAddProfile').addEventListener('click', () => {
       readSettingsForm();
       draft.profiles.push({ name: 'New search', enabled: true, queries: [], price_min: null, price_max: null, pages: 2, category: '', must_have: [], exclude: [] });

@@ -95,17 +95,18 @@ def _sort_key(listing: Listing) -> Tuple[str, int]:
     return listing.added_at or "", 1 if listing.status == STATUS_MATCH else 0
 
 
-def upsert_listings(
+def upsert_listings_detailed(
     items: Iterable[Union[Listing, Dict[str, Any]]],
     path: str = CSV_DATABASE_PATH,
     now: Optional[str] = None,
-) -> Tuple[int, int]:
-    """Adds new MATCH/PARTIAL listings and refreshes known ones (keeps user notes and added_at).
-    Returns (added, total)."""
+) -> Tuple[int, int, List[Listing]]:
+    """Adds new MATCH/PARTIAL listings and refreshes known ones.
+    Returns (added, total, new_listings)."""
     existing = load_listings(path)
     by_key = {item.key: item for item in existing if item.key}
     now = now or datetime.now().strftime("%Y-%m-%d %H:%M")
     added = 0
+    new_listings: List[Listing] = []
 
     for raw in items:
         item = raw if isinstance(raw, Listing) else Listing.from_dict(raw)
@@ -122,12 +123,24 @@ def upsert_listings(
         else:
             item.added_at = now
             existing.append(item)
+            new_listings.append(item)
             added += 1
         by_key[item.key] = item
 
     existing.sort(key=_sort_key, reverse=True)
     save_listings(existing, path)
-    return added, len(existing)
+    return added, len(existing), new_listings
+
+
+def upsert_listings(
+    items: Iterable[Union[Listing, Dict[str, Any]]],
+    path: str = CSV_DATABASE_PATH,
+    now: Optional[str] = None,
+) -> Tuple[int, int]:
+    """Adds new MATCH/PARTIAL listings and refreshes known ones (keeps user notes and added_at).
+    Returns (added, total)."""
+    added, total, _ = upsert_listings_detailed(items, path, now)
+    return added, total
 
 
 def save_note(item_id: str, note: str, path: str = CSV_DATABASE_PATH) -> bool:

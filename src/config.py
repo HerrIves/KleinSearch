@@ -22,6 +22,7 @@ LEGACY_CSV_PATH = os.path.join(DATA_DIR, "donor_listings.csv")
 HTML_DASHBOARD_PATH = os.path.join(BASE_DIR, "index.html")
 LOG_FILE_PATH = os.path.join(DATA_DIR, "scanner.log")
 CONFIG_PATH = os.path.join(DATA_DIR, "config.json")
+NOTIFIED_IDS_PATH = os.path.join(DATA_DIR, "notified_ids.json")
 
 # ==========================================
 # DEFAULTS
@@ -30,6 +31,13 @@ MAX_PAGES_LIMIT = 20
 
 # Words that mark "wanted"/"swap" ads or ads that are no longer available.
 DEFAULT_GLOBAL_EXCLUDE = ["suche", "gesucht", "tausche", "reserviert", "verkauft"]
+
+DEFAULT_TELEGRAM_SETTINGS: Dict[str, Any] = {
+    "enabled": False,
+    "bot_token": "",
+    "chat_id": "",
+    "notify_on": ["MATCH"],
+}
 
 PROFILE_TEMPLATE: Dict[str, Any] = {
     "name": "New search",
@@ -45,6 +53,7 @@ PROFILE_TEMPLATE: Dict[str, Any] = {
 
 DEFAULT_SETTINGS: Dict[str, Any] = {
     "global_exclude": list(DEFAULT_GLOBAL_EXCLUDE),
+    "telegram": dict(DEFAULT_TELEGRAM_SETTINGS),
     "profiles": [
         {
             "name": "MacBook M1 Pro/Max 32GB",
@@ -136,14 +145,38 @@ def _migrate_legacy(raw: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def normalize_telegram(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    raw = raw or {}
+    notify_on = raw.get("notify_on")
+    if isinstance(notify_on, str):
+        notify_on = [s.strip() for s in notify_on.split(",") if s.strip()]
+    elif not isinstance(notify_on, list):
+        notify_on = list(DEFAULT_TELEGRAM_SETTINGS["notify_on"])
+    cleaned_notify = [s.upper() for s in notify_on if isinstance(s, str) and s.upper() in ("MATCH", "PARTIAL")]
+    if not cleaned_notify:
+        cleaned_notify = list(DEFAULT_TELEGRAM_SETTINGS["notify_on"])
+
+    bot_token = str(raw.get("bot_token") or os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
+    chat_id = str(raw.get("chat_id") or os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
+    enabled = bool(raw.get("enabled", False))
+    return {
+        "enabled": enabled,
+        "bot_token": bot_token,
+        "chat_id": chat_id,
+        "notify_on": cleaned_notify,
+    }
+
+
 def normalize_settings(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     raw = raw or {}
     if "profiles" not in raw and ("TARGET_QUERIES" in raw or "DEFAULT_MAX_PRICE" in raw):
         raw = _migrate_legacy(raw)
     profiles = [normalize_profile(p) for p in (raw.get("profiles") or []) if isinstance(p, dict)]
     global_exclude = raw.get("global_exclude")
+    telegram = normalize_telegram(raw.get("telegram"))
     return {
         "global_exclude": _to_list(global_exclude) if global_exclude is not None else list(DEFAULT_GLOBAL_EXCLUDE),
+        "telegram": telegram,
         "profiles": profiles,
     }
 

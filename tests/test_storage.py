@@ -82,3 +82,19 @@ def test_migrate_legacy_csv(tmp_path):
     assert rows["2"].status == "PARTIAL" and rows["2"].location == "Unknown"
     assert legacy.exists()  # old file untouched
     assert storage.migrate_legacy_csv(str(legacy), str(new)) == 0  # only once
+
+
+def test_upsert_listings_detailed(tmp_path):
+    path = str(tmp_path / "l.csv")
+    ad1 = _ad(1, "MATCH")
+    ad2 = _ad(2, "PARTIAL")
+    added, total, new_items = storage.upsert_listings_detailed([ad1, ad2], path)
+    assert (added, total) == (2, 2)
+    assert len(new_items) == 2
+    assert {item.id for item in new_items} == {"1", "2"}
+
+    # Updating existing listing shouldn't be in new_items
+    ad1_updated = _ad(1, "MATCH", price="500 €")
+    added2, total2, new_items2 = storage.upsert_listings_detailed([ad1_updated], path)
+    assert (added2, total2) == (0, 2)
+    assert len(new_items2) == 0

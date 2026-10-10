@@ -19,6 +19,7 @@ A powerful, headless, profile-driven scraping engine and local dashboard for mon
 - **Stealth & Headless:** Runs under the hood using Playwright in headless mode, maintaining persistent browser profiles to avoid bot detection.
 - **Local Storage:** All your data remains private and stored in standard `.csv` files.
 - **Smart Reevaluation:** Whenever you update your profile rules (like adding an exclusion word), the local database is automatically cleaned up.
+- **Telegram Notifications:** Instant alerts sent to your Telegram chat as soon as new matching ads are detected (with built-in deduplication).
 
 ## 🚀 Quick Start
 
@@ -47,6 +48,7 @@ run.bat
 When the application starts, it will automatically open `index.html` in your default browser.
 - **Settings (⚙️):** Add profiles, search queries, exclusion rules, and price limits.
 - **Start Scan (▶️):** Scrapes Kleinanzeigen for the newest listings according to your active profiles. 
+- **Telegram Alerts (📩):** Enter your Bot Token and Chat ID in Settings to get instant notifications when deals appear.
 - You can manage notes directly on the listings inside the UI.
 
 ## 🛠️ Tech Stack

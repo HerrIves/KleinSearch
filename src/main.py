@@ -16,6 +16,7 @@ if sys.stderr and hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
 import config
+import notifier
 import scraper
 import storage
 from evaluator import evaluate_listing
@@ -92,7 +93,10 @@ async def run_scan(page, settings: Dict[str, Any], progress: ProgressFn = _no_pr
     summary["rejected"] = sum(r["status"] == STATUS_REJECTED for r in results)
 
     await progress(95, "Saving results...")
-    summary["added"], summary["total"] = storage.upsert_listings(results)
+    summary["added"], summary["total"], new_items = storage.upsert_listings_detailed(results)
+    notified_count = notifier.notify_listings(new_items, settings)
+    if notified_count:
+        logger.info(f"Telegram alerts sent: {notified_count}")
     logger.info("\n" + "=" * 60)
     logger.info(
         f"MATCH: {summary['match']} | PARTIAL: {summary['partial']} | rejected: {summary['rejected']} | "
@@ -131,6 +135,10 @@ class AppController:
     def save_note(self, item_id: str, note: str) -> bool:
         return storage.save_note(str(item_id), note, self.csv_path)
 
+    def test_telegram(self, bot_token: str, chat_id: str) -> Dict[str, Any]:
+        ok, message = notifier.test_telegram_connection(bot_token, chat_id)
+        return {"ok": ok, "message": message}
+
 
 async def run_ui() -> None:
     from playwright.async_api import async_playwright
@@ -149,6 +157,7 @@ async def run_ui() -> None:
         await ui_page.expose_binding("ka_save_settings", lambda _src, s: controller.save_settings(s))
         await ui_page.expose_binding("ka_start_scan", lambda _src: controller.request_scan())
         await ui_page.expose_binding("ka_save_note", lambda _src, i, n: controller.save_note(i, n))
+        await ui_page.expose_binding("ka_test_telegram", lambda _src, t, c: controller.test_telegram(t, c))
         await ui_page.goto(Path(config.HTML_DASHBOARD_PATH).as_uri())
         logger.info("Dashboard opened. Use Settings / Start scan in the browser window. Close it to exit.")
 
