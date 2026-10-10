@@ -18,7 +18,6 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 BROWSER_PROFILE_DIR = os.path.join(DATA_DIR, "browser_profile")
 CSV_DATABASE_PATH = os.path.join(DATA_DIR, "listings.csv")
-LEGACY_CSV_PATH = os.path.join(DATA_DIR, "donor_listings.csv")
 HTML_DASHBOARD_PATH = os.path.join(BASE_DIR, "index.html")
 LOG_FILE_PATH = os.path.join(DATA_DIR, "scanner.log")
 CONFIG_PATH = os.path.join(DATA_DIR, "config.json")

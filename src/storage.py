@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
-from config import CSV_DATABASE_PATH, LEGACY_CSV_PATH
+from config import CSV_DATABASE_PATH
 from evaluator import evaluate_listing
 from logger import logger
 from models import (
@@ -17,8 +17,6 @@ from models import (
     UNKNOWN_LOCATION,
     Listing,
 )
-
-LEGACY_PROFILE_NAME = "Legacy (ThinkPad donor)"
 
 
 # ==========================================
@@ -39,41 +37,6 @@ def _write_csv(rows: Iterable[Dict[str, str]], path: str) -> None:
         writer.writeheader()
         writer.writerows(rows)
     os.replace(tmp_path, path)
-
-
-# ==========================================
-# LEGACY MIGRATION (old Russian-header donor_listings.csv)
-# ==========================================
-def _convert_legacy_row(row: Dict[str, str]) -> Dict[str, str]:
-    status = row.get("Статус", "")
-    shipping = row.get("Доставка", "")
-    location = row.get("Местоположение", "")
-    return Listing(
-        id=row.get("ID", "") or row.get("Ссылка", ""),
-        title=row.get("Модель / Заголовок", ""),
-        price=row.get("Цена", ""),
-        location=UNKNOWN_LOCATION if not location or location == "Не указано" else location,
-        shipping=SHIPPING_YES if "Доставка возможна" in shipping else SHIPPING_NO,
-        link=row.get("Ссылка", ""),
-        profile=LEGACY_PROFILE_NAME,
-        status=STATUS_MATCH if status == "MATCH" else STATUS_PARTIAL,
-        note=row.get("Комментарий", ""),
-        added_at=row.get("Дата добавления", ""),
-    ).to_csv_row()
-
-
-def migrate_legacy_csv(legacy_path: str = LEGACY_CSV_PATH, new_path: str = CSV_DATABASE_PATH) -> int:
-    """Copies rows from the old file into the new schema once. The old file is left untouched."""
-    if os.path.exists(new_path) or not os.path.exists(legacy_path):
-        return 0
-    rows = [
-        _convert_legacy_row(r)
-        for r in _read_csv(legacy_path)
-        if r.get("Статус") in ("MATCH", "POTENTIAL")
-    ]
-    _write_csv(rows, new_path)
-    logger.info(f"Migrated {len(rows)} listings from {os.path.basename(legacy_path)} to {os.path.basename(new_path)}")
-    return len(rows)
 
 
 # ==========================================

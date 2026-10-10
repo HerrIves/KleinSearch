@@ -276,7 +276,6 @@ async def run_loop(interval_minutes: int) -> None:
 
 def main(argv: Optional[List[str]] = None) -> None:
     args = sys.argv[1:] if argv is None else argv
-    storage.migrate_legacy_csv()
     interval = _parse_loop_interval(args)
 
     if "--clean-db" in args:

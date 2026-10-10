@@ -65,23 +65,6 @@ def test_reevaluate_removes_now_excluded(tmp_path):
     assert "3" in stored  # unknown profile: kept untouched
 
 
-def test_migrate_legacy_csv(tmp_path):
-    legacy = tmp_path / "donor_listings.csv"
-    new = tmp_path / "listings.csv"
-    with open(legacy, "w", encoding="utf-8-sig", newline="") as f:
-        w = csv.writer(f, delimiter=";")
-        w.writerow(["Дата добавления", "Статус", "Модель / Заголовок", "Цена", "SSD 512GB",
-                    "Местоположение", "Доставка", "Комментарий", "Ссылка", "ID"])
-        w.writerow(["2026-09-01 10:00", "MATCH", "Fujitsu U758", "120 €", "Да", "Berlin", "Доставка возможна", "my note", "https://x/1", "1"])
-        w.writerow(["2026-09-01 10:00", "POTENTIAL", "ThinkPad T590", "140 €", "Уточнить", "Не указано", "Только самовывоз", "", "https://x/2", "2"])
-        w.writerow(["2026-09-01 10:00", "REJECTED", "junk", "1 €", "", "", "", "", "https://x/3", "3"])
-    assert storage.migrate_legacy_csv(str(legacy), str(new)) == 2
-    rows = {item.id: item for item in storage.load_listings(str(new))}
-    assert rows["1"].status == "MATCH" and rows["1"].note == "my note"
-    assert rows["1"].shipping == "Shipping possible" and rows["1"].location == "Berlin"
-    assert rows["2"].status == "PARTIAL" and rows["2"].location == "Unknown"
-    assert legacy.exists()  # old file untouched
-    assert storage.migrate_legacy_csv(str(legacy), str(new)) == 0  # only once
 
 
 def test_upsert_listings_detailed(tmp_path):
