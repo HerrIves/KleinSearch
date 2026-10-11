@@ -9,8 +9,6 @@ from evaluator import evaluate_listing
 from logger import logger
 from models import (
     CSV_FIELDS,
-    SHIPPING_NO,
-    SHIPPING_YES,
     STATUS_MATCH,
     STATUS_PARTIAL,
     STATUS_REJECTED,
