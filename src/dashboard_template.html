@@ -307,6 +307,7 @@
       </div>
       <div class="settings-actions">
         <button class="btn btn-primary" id="btnSaveSettings" type="button">💾 Save</button>
+        <button class="btn btn-outline" id="btnSyncGithub" type="button" style="color: #a78bfa; border-color: #a78bfa;">☁️ Sync to GitHub</button>
         <button class="btn btn-outline" id="btnSettingsScan" type="button" style="display:none; color: #38bdf8; border-color: #38bdf8;">▶️ Start Scan</button>
         <button class="btn btn-ghost" id="btnCancelSettings" type="button">Cancel</button>
         <span class="save-state" id="saveState"></span>
@@ -701,6 +702,30 @@
     document.getElementById('btnSettings').addEventListener('click', () => settingsOpen() ? closeSettings() : openSettings());
     document.getElementById('btnCancelSettings').addEventListener('click', closeSettings);
     document.getElementById('btnSaveSettings').addEventListener('click', saveSettings);
+    document.getElementById('btnSyncGithub').addEventListener('click', async () => {
+      const stateEl = document.getElementById('saveState');
+      if (typeof window.ka_sync_github !== 'function') {
+        stateEl.className = 'save-state err';
+        stateEl.textContent = 'Sync available when launched via run.bat';
+        return;
+      }
+      if (!(await saveSettings())) return;
+      stateEl.className = 'save-state';
+      stateEl.textContent = 'Syncing with GitHub Actions…';
+      try {
+        const res = await window.ka_sync_github();
+        if (res && res.ok) {
+          stateEl.className = 'save-state ok';
+          stateEl.textContent = '✓ ' + (res.message || 'Synced with GitHub!');
+        } else {
+          stateEl.className = 'save-state err';
+          stateEl.textContent = 'Sync failed: ' + (res ? res.message : 'Unknown error');
+        }
+      } catch (err) {
+        stateEl.className = 'save-state err';
+        stateEl.textContent = 'Error: ' + (err && err.message ? err.message : err);
+      }
+    });
     document.getElementById('btnSettingsScan').addEventListener('click', () => document.getElementById('btnStartScan').click());
     document.getElementById('btnTestTelegram').addEventListener('click', async () => {
       const statusEl = document.getElementById('tgTestStatus');

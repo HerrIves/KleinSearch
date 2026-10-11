@@ -69,3 +69,17 @@ def test_broken_json_falls_back_to_defaults(tmp_path):
     path = tmp_path / "config.json"
     path.write_text("{ not json", encoding="utf-8")
     assert config.load_settings(str(path)) == config.DEFAULT_SETTINGS
+
+
+def test_normalize_telegram_env(monkeypatch):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "tok_env")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "chat_env")
+    monkeypatch.setenv("TELEGRAM_ENABLED", "true")
+    res = config.normalize_telegram({})
+    assert res["bot_token"] == "tok_env"
+    assert res["chat_id"] == "chat_env"
+    assert res["enabled"] is True
+
+    monkeypatch.setenv("TELEGRAM_ENABLED", "false")
+    res2 = config.normalize_telegram({})
+    assert res2["enabled"] is False

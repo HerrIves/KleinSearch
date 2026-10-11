@@ -6,8 +6,10 @@
   python src/main.py --clean-db   re-check stored listings against current profiles
 """
 import asyncio
+import copy
 import os
 import random
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict, List, Optional
@@ -141,6 +143,37 @@ class AppController:
         ok, message = notifier.test_telegram_connection(bot_token, chat_id)
         return {"ok": ok, "message": message}
 
+    def sync_github(self) -> Dict[str, Any]:
+        """Saves current search profiles to root config.json (stripping bot token) and pushes to Git."""
+        try:
+            settings = copy.deepcopy(self.get_settings())
+            if "telegram" in settings:
+                settings["telegram"]["bot_token"] = ""
+            config.save_settings(settings, config.ROOT_CONFIG_PATH)
+
+            res_add = subprocess.run(["git", "add", "config.json"], cwd=config.BASE_DIR, capture_output=True, text=True)
+            if res_add.returncode != 0:
+                return {"ok": False, "message": f"git add failed: {res_add.stderr.strip()}"}
+
+            status = subprocess.run(["git", "status", "--porcelain", "config.json"], cwd=config.BASE_DIR, capture_output=True, text=True)
+            if not status.stdout.strip():
+                push_res = subprocess.run(["git", "push"], cwd=config.BASE_DIR, capture_output=True, text=True)
+                if push_res.returncode != 0:
+                    return {"ok": False, "message": f"git push failed: {push_res.stderr.strip()}"}
+                return {"ok": True, "message": "GitHub Actions is already up to date!"}
+
+            commit_res = subprocess.run(["git", "commit", "-m", "chore: sync search profiles with GitHub Actions"], cwd=config.BASE_DIR, capture_output=True, text=True)
+            if commit_res.returncode != 0:
+                return {"ok": False, "message": f"git commit failed: {commit_res.stderr.strip()}"}
+
+            push_res = subprocess.run(["git", "push"], cwd=config.BASE_DIR, capture_output=True, text=True)
+            if push_res.returncode != 0:
+                return {"ok": False, "message": f"git push failed: {push_res.stderr.strip()}"}
+
+            return {"ok": True, "message": "Successfully synced with GitHub Actions!"}
+        except Exception as e:
+            return {"ok": False, "message": str(e)}
+
 
 async def run_ui() -> None:
     from playwright.async_api import async_playwright
@@ -160,6 +193,7 @@ async def run_ui() -> None:
         await ui_page.expose_binding("ka_start_scan", lambda _src: controller.request_scan())
         await ui_page.expose_binding("ka_save_note", lambda _src, i, n: controller.save_note(i, n))
         await ui_page.expose_binding("ka_test_telegram", lambda _src, t, c: controller.test_telegram(t, c))
+        await ui_page.expose_binding("ka_sync_github", lambda _src: controller.sync_github())
         await ui_page.goto(Path(config.HTML_DASHBOARD_PATH).as_uri())
         logger.info("Dashboard opened. Use Settings / Start scan in the browser window. Close it to exit.")
 
@@ -284,7 +318,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         generate_dashboard(settings=config.load_settings())
     elif interval is not None:
         asyncio.run(run_loop(interval))
-    elif "--no-ui" in args:
+    elif "--no-ui" in args or "--headless" in args:
         asyncio.run(run_console())
     else:
         asyncio.run(run_ui())

@@ -80,6 +80,32 @@ docker compose logs -f
 
 ---
 
+## ☁️ Free Cloud Monitoring (GitHub Actions)
+
+You can run KleinSearch **100% free in the cloud** using GitHub Actions, without keeping your computer on.
+
+### 1. Fork the Repository
+Click the **Fork** button at the top right of this page to create your own copy.
+
+### 2. Add Your Telegram Secrets
+In your forked repository:
+1. Go to **Settings** ➔ **Secrets and variables** ➔ **Actions**.
+2. Click **New repository secret** and add:
+   - `TELEGRAM_BOT_TOKEN`: Your bot token from [@BotFather](https://t.me/BotFather).
+   - `TELEGRAM_CHAT_ID`: Your numerical Telegram user or group ID.
+
+### 3. Enable Workflows
+1. Click the **Actions** tab in your repository.
+2. Click **"I understand my workflows, go ahead and enable them"**.
+3. Under **Workflows** on the left, select **Scheduled Scan** and click **Run workflow** to test it immediately.
+
+### 4. Manage Your Search Queries
+You can adjust what the cloud bot searches for in two easy ways:
+- **Via Local Dashboard:** Launch `run.bat`, adjust your search profiles, and click **`☁️ Sync to GitHub`** in Settings.
+- **Via GitHub Web:** Open `config.json` in your repository, click the ✏️ (Edit) icon, change your search terms, and commit.
+
+---
+
 ## 🛠️ Tech Stack
 - **Backend:** Python (Asyncio, Playwright, BeautifulSoup)
 - **Frontend:** Vanilla JS, CSS (Serverless local HTML architecture)

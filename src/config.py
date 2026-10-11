@@ -21,6 +21,7 @@ CSV_DATABASE_PATH = os.path.join(DATA_DIR, "listings.csv")
 HTML_DASHBOARD_PATH = os.path.join(BASE_DIR, "index.html")
 LOG_FILE_PATH = os.path.join(DATA_DIR, "scanner.log")
 CONFIG_PATH = os.path.join(DATA_DIR, "config.json")
+ROOT_CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 NOTIFIED_IDS_PATH = os.path.join(DATA_DIR, "notified_ids.json")
 
 # ==========================================
@@ -157,7 +158,15 @@ def normalize_telegram(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
 
     bot_token = str(raw.get("bot_token") or os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
     chat_id = str(raw.get("chat_id") or os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
-    enabled = bool(raw.get("enabled", False))
+
+    env_enabled = os.environ.get("TELEGRAM_ENABLED")
+    if env_enabled is not None:
+        enabled = env_enabled.lower() in ("1", "true", "yes")
+    elif "enabled" in raw:
+        enabled = bool(raw.get("enabled", False))
+    else:
+        enabled = bool(bot_token and chat_id)
+
     return {
         "enabled": enabled,
         "bot_token": bot_token,
@@ -185,6 +194,9 @@ def normalize_settings(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
 # ==========================================
 def load_settings(path: str = CONFIG_PATH) -> Dict[str, Any]:
     """Reads settings from disk. Missing or broken file -> defaults (file is not overwritten)."""
+    if path == CONFIG_PATH and not os.path.exists(path) and os.path.exists(ROOT_CONFIG_PATH):
+        path = ROOT_CONFIG_PATH
+
     if not os.path.exists(path):
         return copy.deepcopy(DEFAULT_SETTINGS)
     try:

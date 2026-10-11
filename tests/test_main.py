@@ -44,3 +44,18 @@ def test_app_controller_telegram_test(mock_test):
     controller = AppController()
     res = controller.test_telegram("fake_token", "fake_chat")
     assert res == {"ok": True, "message": "OK"}
+
+
+@patch("subprocess.run")
+def test_app_controller_sync_github(mock_run, tmp_path):
+    config_file = str(tmp_path / "config.json")
+    controller = AppController(config_path=config_file)
+    controller.save_settings({"telegram": {"bot_token": "secret_token"}, "profiles": []})
+
+    mock_run.return_value.returncode = 0
+    mock_run.return_value.stdout = " M config.json"
+    mock_run.return_value.stderr = ""
+
+    res = controller.sync_github()
+    assert res["ok"] is True
+    assert "synced" in res["message"].lower() or "already" in res["message"].lower()
