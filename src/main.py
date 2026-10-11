@@ -143,13 +143,14 @@ class AppController:
         ok, message = notifier.test_telegram_connection(bot_token, chat_id)
         return {"ok": ok, "message": message}
 
-    def sync_github(self) -> Dict[str, Any]:
+    def sync_github(self, root_config_path: Optional[str] = None) -> Dict[str, Any]:
         """Saves current search profiles to root config.json (stripping bot token) and pushes to Git."""
         try:
             settings = copy.deepcopy(self.get_settings())
             if "telegram" in settings:
                 settings["telegram"]["bot_token"] = ""
-            config.save_settings(settings, config.ROOT_CONFIG_PATH)
+            target_path = root_config_path or config.ROOT_CONFIG_PATH
+            config.save_settings(settings, target_path)
 
             res_add = subprocess.run(["git", "add", "config.json"], cwd=config.BASE_DIR, capture_output=True, text=True)
             if res_add.returncode != 0:

@@ -56,6 +56,7 @@ def test_app_controller_sync_github(mock_run, tmp_path):
     mock_run.return_value.stdout = " M config.json"
     mock_run.return_value.stderr = ""
 
-    res = controller.sync_github()
+    root_file = str(tmp_path / "root_config.json")
+    res = controller.sync_github(root_config_path=root_file)
     assert res["ok"] is True
     assert "synced" in res["message"].lower() or "already" in res["message"].lower()

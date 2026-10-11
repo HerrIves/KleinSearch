@@ -7,12 +7,53 @@
     "verkauft"
   ],
   "telegram": {
-    "enabled": false,
+    "enabled": true,
     "bot_token": "",
     "chat_id": "",
     "notify_on": [
       "MATCH"
     ]
   },
-  "profiles": []
+  "profiles": [
+    {
+      "name": "apple",
+      "enabled": true,
+      "queries": [
+        "apple m4",
+        "apple m5"
+      ],
+      "price_min": 100,
+      "price_max": 800,
+      "pages": 3,
+      "category": "",
+      "must_have": [
+        "32gb",
+        "48gb",
+        "64gb"
+      ],
+      "exclude": [
+        "ipad",
+        "intel",
+        "i5",
+        "i7"
+      ]
+    },
+    {
+      "name": "tv",
+      "enabled": false,
+      "queries": [
+        "tv 55",
+        "tv 65",
+        "tv 70"
+      ],
+      "price_min": null,
+      "price_max": 50,
+      "pages": 2,
+      "category": "175",
+      "must_have": [],
+      "exclude": [
+        "defekt"
+      ]
+    }
+  ]
 }
