@@ -45,7 +45,6 @@
       "name": "tv",
       "enabled": true,
       "queries": [
-        "tv 55",
         "tv 65",
         "tv 70"
       ],
@@ -53,8 +52,8 @@
       "price_max": 100,
       "pages": 2,
       "category": "175",
-      "location": "",
-      "radius": null,
+      "location": "59821",
+      "radius": 100,
       "must_have": [],
       "exclude": [
         "defekt"
