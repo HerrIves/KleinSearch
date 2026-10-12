@@ -79,6 +79,8 @@ async def run_scan(page, settings: Dict[str, Any], progress: ProgressFn = _no_pr
             price_min=profile.get("price_min"),
             price_max=profile.get("price_max"),
             category=profile.get("category", ""),
+            location=profile.get("location", ""),
+            radius=profile.get("radius"),
             on_page=on_page,
         )
         for item in raw:

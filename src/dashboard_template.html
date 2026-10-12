@@ -106,7 +106,7 @@
     .profile-top .field input { font-weight: 700; font-size: 1rem; }
     .toggle { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.85rem; cursor: pointer; user-select: none; }
     .toggle input { width: 16px; height: 16px; accent-color: var(--match); }
-    .profile-grid { display: grid; grid-template-columns: repeat(4, minmax(110px, 1fr)); gap: 12px; margin-bottom: 12px; }
+    .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 12px; }
     .profile-lists { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     @media (max-width: 900px) { .profile-grid, .profile-lists { grid-template-columns: 1fr 1fr; } }
     .settings-actions { display: flex; gap: 10px; margin-top: 18px; align-items: center; flex-wrap: wrap; }
@@ -121,6 +121,28 @@
     .stat-value { font-size: 1.8rem; font-weight: 700; margin-top: 4px; }
     .stat-value.green { color: var(--match); }
     .stat-value.amber { color: var(--potential); }
+
+    /* Profile Tabs / Закладки для поисков */
+    .profile-tabs-bar {
+      display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 14px 2px;
+      scrollbar-width: thin; -webkit-overflow-scrolling: touch;
+    }
+    .profile-tab {
+      display: inline-flex; align-items: center; gap: 8px; background: var(--surface);
+      border: 1px solid var(--surface-border); border-radius: 8px; padding: 8px 16px;
+      font-size: 0.88rem; font-weight: 600; color: var(--text-muted); cursor: pointer;
+      white-space: nowrap; transition: all 0.15s ease; user-select: none;
+    }
+    .profile-tab:hover { background: #1e293b; color: #fff; border-color: #475569; }
+    .profile-tab.active {
+      background: #0369a1; color: #fff; border-color: #38bdf8;
+      box-shadow: 0 2px 10px rgba(56, 189, 248, 0.25);
+    }
+    .profile-tab-count {
+      background: rgba(255, 255, 255, 0.12); padding: 2px 8px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 700;
+    }
+    .profile-tab.active .profile-tab-count { background: rgba(255, 255, 255, 0.25); color: #fff; }
 
     /* Controls */
     .controls {
@@ -299,6 +321,15 @@
             <input type="text" id="tgChatId" placeholder="123456789">
           </div>
         </div>
+        <div style="display: flex; align-items: center; gap: 16px; margin-top: 10px; flex-wrap: wrap;">
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Notify on:</span>
+          <label style="font-size: 0.8rem; color: #f1f5f9; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="checkbox" id="tgNotifyMatch" checked> 🎯 Match
+          </label>
+          <label style="font-size: 0.8rem; color: #f1f5f9; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="checkbox" id="tgNotifyPartial"> ⚠️ Partial (≥1 criterion)
+          </label>
+        </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 8px;">
           <p class="help" style="margin: 0;">Alerts you immediately when a new matching ad is found.</p>
           <button class="btn btn-ghost btn-sm" id="btnTestTelegram" type="button" style="border: 1px solid var(--border);">🔔 Test Telegram</button>
@@ -321,6 +352,8 @@
       <div class="stat-card"><div class="stat-label">📦 Total stored</div><div class="stat-value" id="statTotal">0</div></div>
       <div class="stat-card"><div class="stat-label">🧭 Active profiles</div><div class="stat-value" id="statProfiles">0</div></div>
     </div>
+
+    <div class="profile-tabs-bar" id="profileTabs"></div>
 
     <div class="controls">
       <div class="search-box">
@@ -395,6 +428,33 @@
     function itemKey(item) { return String(item.id || item.link); }
 
     // ---------- header / stats ----------
+    function renderProfileTabs() {
+      const tabsContainer = document.getElementById('profileTabs');
+      if (!tabsContainer) return;
+      const names = [...new Set(LISTINGS.map(i => i.profile).filter(Boolean))].sort();
+      (SETTINGS.profiles || []).forEach(p => {
+        if (p.name && !names.includes(p.name)) names.push(p.name);
+      });
+
+      const counts = {};
+      names.forEach(n => { counts[n] = 0; });
+      LISTINGS.forEach(i => {
+        if (i.profile && counts[i.profile] !== undefined) counts[i.profile]++;
+      });
+
+      let html = `<button type="button" class="profile-tab ${profileFilter === '' ? 'active' : ''}" data-profile="">` +
+        `🌐 All profiles <span class="profile-tab-count">${LISTINGS.length}</span></button>`;
+
+      names.forEach(name => {
+        const cnt = counts[name] || 0;
+        const isActive = profileFilter === name ? 'active' : '';
+        html += `<button type="button" class="profile-tab ${isActive}" data-profile="${escapeHtml(name)}">` +
+          `🔍 ${escapeHtml(name)} <span class="profile-tab-count">${cnt}</span></button>`;
+      });
+
+      tabsContainer.innerHTML = html;
+    }
+
     function renderHeader() {
       const active = (SETTINGS.profiles || []).filter(p => p.enabled);
       document.getElementById('statProfiles').textContent = active.length;
@@ -407,6 +467,7 @@
       select.innerHTML = '<option value="">All profiles</option>' +
         names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
       select.value = names.includes(current) ? current : '';
+      renderProfileTabs();
     }
 
     function renderStats() {
@@ -588,6 +649,19 @@
     ];
     const catOptions = (sel) => categories.map(c => `<option value="${c.v}" ${String(sel||'') === c.v ? 'selected' : ''}>${c.n}</option>`).join('');
 
+    const radiusList = [
+      { v: '', n: 'Exact location' },
+      { v: '5', n: '+ 5 km' },
+      { v: '10', n: '+ 10 km' },
+      { v: '20', n: '+ 20 km' },
+      { v: '30', n: '+ 30 km' },
+      { v: '50', n: '+ 50 km' },
+      { v: '100', n: '+ 100 km' },
+      { v: '150', n: '+ 150 km' },
+      { v: '200', n: '+ 200 km' }
+    ];
+    const radiusOptions = (sel) => radiusList.map(r => `<option value="${r.v}" ${String(sel||'') === r.v ? 'selected' : ''}>${r.n}</option>`).join('');
+
     // ---------- settings ----------
     function profileCardHtml(p, index) {
       const v = x => escapeHtml(x ?? '');
@@ -606,6 +680,8 @@
               <input type="number" min="0" data-f="price_max" value="${v(p.price_max)}" placeholder="max">
             </div>
           </div>
+          <div class="field"><label>City / PLZ</label><input type="text" data-f="location" value="${v(p.location)}" placeholder="Berlin, 10115…"></div>
+          <div class="field"><label>Radius</label><select data-f="radius" class="radius-select">${radiusOptions(p.radius)}</select></div>
           <div class="field"><label>Pages per query</label><input type="number" min="1" max="20" data-f="pages" value="${v(p.pages)}"></div>
           <div class="field"><label>Category</label><select data-f="category" class="category-select">${catOptions(p.category)}</select></div>
         </div>
@@ -625,6 +701,9 @@
       document.getElementById('tgEnabled').checked = Boolean(tg.enabled);
       document.getElementById('tgBotToken').value = tg.bot_token || '';
       document.getElementById('tgChatId').value = tg.chat_id || '';
+      const notifyOn = Array.isArray(tg.notify_on) ? tg.notify_on : ['MATCH'];
+      document.getElementById('tgNotifyMatch').checked = notifyOn.includes('MATCH');
+      document.getElementById('tgNotifyPartial').checked = notifyOn.includes('PARTIAL');
       document.getElementById('tgTestStatus').textContent = '';
       const container = document.getElementById('profiles');
       container.innerHTML = draft.profiles.length
@@ -635,11 +714,14 @@
     function readSettingsForm() {
       const cards = [...document.querySelectorAll('.profile-card')];
       draft.global_exclude = document.getElementById('globalExclude').value.split(',').map(s => s.trim()).filter(Boolean);
+      const notifyOn = [];
+      if (document.getElementById('tgNotifyMatch').checked) notifyOn.push('MATCH');
+      if (document.getElementById('tgNotifyPartial').checked) notifyOn.push('PARTIAL');
       draft.telegram = {
         enabled: document.getElementById('tgEnabled').checked,
         bot_token: document.getElementById('tgBotToken').value.trim(),
         chat_id: document.getElementById('tgChatId').value.trim(),
-        notify_on: (draft.telegram && draft.telegram.notify_on) || ['MATCH'],
+        notify_on: notifyOn.length ? notifyOn : ['MATCH'],
       };
       draft.profiles = cards.map(card => {
         const get = f => card.querySelector(`[data-f="${f}"]`);
@@ -652,6 +734,8 @@
           price_max: num('price_max'),
           pages: num('pages') || 1,
           category: get('category').value.trim(),
+          location: (get('location') ? get('location').value.trim() : ''),
+          radius: num('radius'),
           must_have: textToList(get('must_have').value),
           exclude: textToList(get('exclude').value),
         };
@@ -775,7 +859,7 @@
     });
     document.getElementById('btnAddProfile').addEventListener('click', () => {
       readSettingsForm();
-      draft.profiles.push({ name: 'New search', enabled: true, queries: [], price_min: null, price_max: null, pages: 2, category: '', must_have: [], exclude: [] });
+      draft.profiles.push({ name: 'New search', enabled: true, queries: [], price_min: null, price_max: null, pages: 2, category: '', location: '', radius: null, must_have: [], exclude: [] });
       renderSettings();
       const cards = document.querySelectorAll('.profile-card');
       cards[cards.length - 1].querySelector('[data-f="name"]').select();
@@ -828,7 +912,23 @@
     // ---------- filters ----------
     document.getElementById('searchInput').addEventListener('input', e => { searchQuery = e.target.value.trim(); renderTable(); });
     document.getElementById('sortSelect').addEventListener('change', e => { sortMode = e.target.value; renderTable(); });
-    document.getElementById('profileSelect').addEventListener('change', e => { profileFilter = e.target.value; renderTable(); });
+    document.getElementById('profileSelect').addEventListener('change', e => {
+      profileFilter = e.target.value;
+      renderProfileTabs();
+      renderTable();
+    });
+    const profileTabsEl = document.getElementById('profileTabs');
+    if (profileTabsEl) {
+      profileTabsEl.addEventListener('click', e => {
+        const tab = e.target.closest('.profile-tab');
+        if (!tab) return;
+        profileFilter = tab.dataset.profile || '';
+        const select = document.getElementById('profileSelect');
+        if (select) select.value = profileFilter;
+        renderProfileTabs();
+        renderTable();
+      });
+    }
     document.querySelectorAll('.pill').forEach(btn => btn.addEventListener('click', () => {
       document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');

@@ -83,3 +83,20 @@ def test_normalize_telegram_env(monkeypatch):
     monkeypatch.setenv("TELEGRAM_ENABLED", "false")
     res2 = config.normalize_telegram({})
     assert res2["enabled"] is False
+
+
+def test_normalize_profile_location_and_radius():
+    p = config.normalize_profile({
+        "location": "  Berlin   Mitte ",
+        "radius": "20",
+    })
+    assert p["location"] == "Berlin Mitte"
+    assert p["radius"] == 20
+
+    p_empty = config.normalize_profile({
+        "location": None,
+        "radius": "0",
+    })
+    assert p_empty["location"] == ""
+    assert p_empty["radius"] is None
+

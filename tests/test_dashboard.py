@@ -202,3 +202,15 @@ def test_render_dashboard_sanitizes_telegram_token():
     html = render_dashboard([], settings)
     assert "SUPER_SECRET_TOKEN_12345" not in html
     assert '"bot_token": ""' in html
+
+
+def test_render_dashboard_includes_profile_tabs_and_notify_controls():
+    from generate_dashboard import render_dashboard
+    html = render_dashboard([], {"profiles": [{"name": "ThinkPad", "enabled": True}]})
+    assert 'id="profileTabs"' in html
+    assert 'id="tgNotifyMatch"' in html
+    assert 'id="tgNotifyPartial"' in html
+    assert 'data-f="location"' in html
+    assert 'data-f="radius"' in html
+
+

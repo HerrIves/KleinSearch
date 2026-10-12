@@ -97,6 +97,16 @@ def test_parse_price_value(text, value):
         ({"query": "x", "price_max": 150, "page": 2}, "https://www.kleinanzeigen.de/s-preis::150/seite:2/x/k0"),
         ({"query": "x", "price_min": 10}, "https://www.kleinanzeigen.de/s-preis:10:/x/k0"),
         ({"query": "über größe"}, "https://www.kleinanzeigen.de/s-%C3%BCber-gr%C3%B6%C3%9Fe/k0"),
+        ({"query": "macbook", "location": "Berlin"}, "https://www.kleinanzeigen.de/s-macbook/berlin/k0"),
+        ({"query": "macbook", "location": "10115", "radius": 20}, "https://www.kleinanzeigen.de/s-macbook/10115/k0r20"),
+        (
+            {"query": "macbook", "price_min": 300, "price_max": 1200, "category": "278", "location": "München", "radius": 50},
+            "https://www.kleinanzeigen.de/s-preis:300:1200/macbook/m%C3%BCnchen/k0c278r50",
+        ),
+        (
+            {"query": "fahrrad", "location": "Frankfurt am Main", "radius": 10},
+            "https://www.kleinanzeigen.de/s-fahrrad/frankfurt-am-main/k0r10",
+        ),
     ],
 )
 def test_make_search_url(kwargs, url):

@@ -11,7 +11,8 @@
     "bot_token": "",
     "chat_id": "1175147457",
     "notify_on": [
-      "MATCH"
+      "MATCH",
+      "PARTIAL"
     ]
   },
   "profiles": [

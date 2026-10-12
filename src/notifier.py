@@ -9,7 +9,7 @@ import urllib.parse
 import urllib.request
 
 import config
-from models import Listing
+from models import Listing, STATUS_MATCH, STATUS_PARTIAL
 
 logger = logging.getLogger("scanner")
 
@@ -122,8 +122,18 @@ def notify_listings(
     if not token or not chat:
         return 0
 
-    notify_on = set(tg.get("notify_on") or ["MATCH"])
-    candidates = [item for item in listings if item.status in notify_on and item.key]
+    notify_on = set(tg.get("notify_on") or [STATUS_MATCH])
+    candidates = []
+    for item in listings:
+        if not item.key:
+            continue
+        if item.status == STATUS_MATCH and STATUS_MATCH in notify_on:
+            candidates.append(item)
+        elif item.status == STATUS_PARTIAL and STATUS_PARTIAL in notify_on:
+            # If must_have criteria exist, notify if at least one criterion matched!
+            if item.matched or not item.missing:
+                candidates.append(item)
+
     if not candidates:
         return 0
 

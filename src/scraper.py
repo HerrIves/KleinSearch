@@ -122,6 +122,8 @@ async def scan_query(
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
     category: str = "",
+    location: str = "",
+    radius: Optional[int] = None,
     on_page: Optional[Callable[[int, int], Awaitable[None]]] = None,
 ) -> List[Dict[str, str]]:
     """Scans up to `pages` result pages for one query. Stops early on an empty page."""
@@ -130,7 +132,15 @@ async def scan_query(
     for page_num in range(1, pages + 1):
         if on_page:
             await on_page(page_num, pages)
-        url = make_search_url(query, price_min, price_max, category, page=page_num)
+        url = make_search_url(
+            query,
+            price_min,
+            price_max,
+            category,
+            page=page_num,
+            location=location,
+            radius=radius,
+        )
         try:
             results = await scan_url(page, url)
         except Exception as e:
