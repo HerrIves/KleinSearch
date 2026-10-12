@@ -106,7 +106,7 @@
     .profile-top .field input { font-weight: 700; font-size: 1rem; }
     .toggle { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.85rem; cursor: pointer; user-select: none; }
     .toggle input { width: 16px; height: 16px; accent-color: var(--match); }
-    .profile-grid { display: grid; grid-template-columns: repeat(4, minmax(110px, 1fr)); gap: 12px; margin-bottom: 12px; }
+    .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 12px; }
     .profile-lists { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     @media (max-width: 900px) { .profile-grid, .profile-lists { grid-template-columns: 1fr 1fr; } }
     .settings-actions { display: flex; gap: 10px; margin-top: 18px; align-items: center; flex-wrap: wrap; }
@@ -649,6 +649,19 @@
     ];
     const catOptions = (sel) => categories.map(c => `<option value="${c.v}" ${String(sel||'') === c.v ? 'selected' : ''}>${c.n}</option>`).join('');
 
+    const radiusList = [
+      { v: '', n: 'Exact location' },
+      { v: '5', n: '+ 5 km' },
+      { v: '10', n: '+ 10 km' },
+      { v: '20', n: '+ 20 km' },
+      { v: '30', n: '+ 30 km' },
+      { v: '50', n: '+ 50 km' },
+      { v: '100', n: '+ 100 km' },
+      { v: '150', n: '+ 150 km' },
+      { v: '200', n: '+ 200 km' }
+    ];
+    const radiusOptions = (sel) => radiusList.map(r => `<option value="${r.v}" ${String(sel||'') === r.v ? 'selected' : ''}>${r.n}</option>`).join('');
+
     // ---------- settings ----------
     function profileCardHtml(p, index) {
       const v = x => escapeHtml(x ?? '');
@@ -667,6 +680,8 @@
               <input type="number" min="0" data-f="price_max" value="${v(p.price_max)}" placeholder="max">
             </div>
           </div>
+          <div class="field"><label>City / PLZ</label><input type="text" data-f="location" value="${v(p.location)}" placeholder="Berlin, 10115…"></div>
+          <div class="field"><label>Radius</label><select data-f="radius" class="radius-select">${radiusOptions(p.radius)}</select></div>
           <div class="field"><label>Pages per query</label><input type="number" min="1" max="20" data-f="pages" value="${v(p.pages)}"></div>
           <div class="field"><label>Category</label><select data-f="category" class="category-select">${catOptions(p.category)}</select></div>
         </div>
@@ -719,6 +734,8 @@
           price_max: num('price_max'),
           pages: num('pages') || 1,
           category: get('category').value.trim(),
+          location: (get('location') ? get('location').value.trim() : ''),
+          radius: num('radius'),
           must_have: textToList(get('must_have').value),
           exclude: textToList(get('exclude').value),
         };
@@ -842,7 +859,7 @@
     });
     document.getElementById('btnAddProfile').addEventListener('click', () => {
       readSettingsForm();
-      draft.profiles.push({ name: 'New search', enabled: true, queries: [], price_min: null, price_max: null, pages: 2, category: '', must_have: [], exclude: [] });
+      draft.profiles.push({ name: 'New search', enabled: true, queries: [], price_min: null, price_max: null, pages: 2, category: '', location: '', radius: null, must_have: [], exclude: [] });
       renderSettings();
       const cards = document.querySelectorAll('.profile-card');
       cards[cards.length - 1].querySelector('[data-f="name"]').select();

@@ -15,11 +15,13 @@ def make_search_url(
     price_max: Optional[int] = None,
     category: str = "",
     page: int = 1,
+    location: str = "",
+    radius: Optional[int] = None,
 ) -> str:
     """Builds a Kleinanzeigen search URL.
 
     Format (verified against the live site):
-      /s-preis:<min>:<max>/seite:<n>/<query-slug>/k0c<category>
+      /s-preis:<min>:<max>/seite:<n>/<query-slug>/<location-slug>/k0c<category>r<radius>
     """
     slug = urllib.parse.quote("-".join(query.lower().split()))
     segments = []
@@ -28,8 +30,12 @@ def make_search_url(
     if page > 1:
         segments.append(f"seite:{page}")
     segments.append(slug)
+    if location and location.strip():
+        loc_slug = urllib.parse.quote("-".join(location.strip().lower().split()))
+        segments.append(loc_slug)
     category_part = f"c{category}" if category else ""
-    return f"{BASE_URL}/s-{'/'.join(segments)}/k0{category_part}"
+    radius_part = f"r{radius}" if radius else ""
+    return f"{BASE_URL}/s-{'/'.join(segments)}/k0{category_part}{radius_part}"
 
 
 _PRICE_RE = re.compile(r"\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?")

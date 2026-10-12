@@ -210,4 +210,7 @@ def test_render_dashboard_includes_profile_tabs_and_notify_controls():
     assert 'id="profileTabs"' in html
     assert 'id="tgNotifyMatch"' in html
     assert 'id="tgNotifyPartial"' in html
+    assert 'data-f="location"' in html
+    assert 'data-f="radius"' in html
+
 

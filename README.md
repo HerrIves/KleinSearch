@@ -17,6 +17,7 @@ A powerful, headless, profile-driven scraping engine and local dashboard for mon
 - **Smart Filtering:** 
   - **Must-have** criteria (supports aliases via `|`, e.g., `m1 pro|m1 max`).
   - **Exclusion** keywords (globally or per-profile) to instantly filter out irrelevant or broken items.
+  - **City & Radius Filtering:** Search within specific cities or postal codes (e.g., `Berlin`, `10115`, `Frankfurt am Main`) with configurable radius (`+5 km` to `+200 km`).
   - Custom price ranges (`Price from` / `Price to`).
 - **Interactive UI Dashboard:** A fully local or hosted HTML/CSS/JS frontend to view, sort, and manage your findings.
 - **Stealth & Headless:** Runs under the hood using Playwright in headless mode, maintaining persistent browser profiles to avoid bot detection.

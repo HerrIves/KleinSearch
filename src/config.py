@@ -47,6 +47,8 @@ PROFILE_TEMPLATE: Dict[str, Any] = {
     "price_max": None,
     "pages": 3,
     "category": "",
+    "location": "",
+    "radius": None,
     "must_have": [],
     "exclude": [],
 }
@@ -119,6 +121,9 @@ def normalize_profile(raw: Dict[str, Any]) -> Dict[str, Any]:
     pages = _to_int(raw.get("pages")) or PROFILE_TEMPLATE["pages"]
     profile["pages"] = max(1, min(MAX_PAGES_LIMIT, pages))
     profile["category"] = "".join(ch for ch in str(raw.get("category") or "") if ch.isdigit())
+    profile["location"] = " ".join(str(raw.get("location") or "").split())
+    radius = _to_int(raw.get("radius"))
+    profile["radius"] = radius if radius and radius > 0 else None
     profile["must_have"] = _to_list(raw.get("must_have"))
     profile["exclude"] = _to_list(raw.get("exclude"))
     return profile
