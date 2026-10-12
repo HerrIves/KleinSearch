@@ -24,13 +24,14 @@
         "apple m5"
       ],
       "price_min": 100,
-      "price_max": 1800,
+      "price_max": 800,
       "pages": 3,
       "category": "",
       "must_have": [
-        "32gb",
-        "48gb",
-        "64gb"
+        "16gb | 16 gb",
+        "32gb | 32 gb",
+        "48gb | 48 gb",
+        "64gb | 64 gb"
       ],
       "exclude": [
         "ipad",
