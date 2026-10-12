@@ -100,8 +100,9 @@ In your forked repository:
 3. Under **Workflows** on the left, select **Scheduled Scan** and click **Run workflow** to test it immediately.
 
 ### 4. Manage Your Search Queries
-You can adjust what the cloud bot searches for in two easy ways:
-- **Via Local Dashboard:** Launch `run.bat`, adjust your search profiles, and click **`☁️ Sync to GitHub`** in Settings.
+You can adjust what the cloud bot searches for in three easy ways:
+- **Via Mobile Dashboard (GitHub Pages):** Open your live dashboard on your phone, edit profiles in Settings, and tap **`🚀 Apply via GitHub Issue`** (securely executed only by the repository owner).
+- **Via Local Desktop Dashboard:** Launch `run.bat`, adjust your search profiles, and click **`☁️ Sync to GitHub`** in Settings.
 - **Via GitHub Web:** Open `config.json` in your repository, click the ✏️ (Edit) icon, change your search terms, and commit.
 
 ### 5. Live Mobile Dashboard (GitHub Pages)

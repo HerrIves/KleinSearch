@@ -308,6 +308,7 @@
       <div class="settings-actions">
         <button class="btn btn-primary" id="btnSaveSettings" type="button">💾 Save</button>
         <button class="btn btn-outline" id="btnSyncGithub" type="button" style="color: #a78bfa; border-color: #a78bfa;">☁️ Sync to GitHub</button>
+        <button class="btn btn-primary" id="btnUpdateIssue" type="button" style="display:none; background: #0284c7;">🚀 Apply via GitHub Issue</button>
         <button class="btn btn-outline" id="btnSettingsScan" type="button" style="display:none; color: #38bdf8; border-color: #38bdf8;">▶️ Start Scan</button>
         <button class="btn btn-ghost" id="btnCancelSettings" type="button">Cancel</button>
         <span class="save-state" id="saveState"></span>
@@ -726,6 +727,21 @@
         stateEl.textContent = 'Error: ' + (err && err.message ? err.message : err);
       }
     });
+    document.getElementById('btnUpdateIssue').addEventListener('click', () => {
+      readSettingsForm();
+      const safeDraft = JSON.parse(JSON.stringify(draft));
+      if (safeDraft.telegram) safeDraft.telegram.bot_token = '';
+      const jsonText = JSON.stringify(safeDraft, null, 2);
+      const title = encodeURIComponent('[Config Update] Update search profiles');
+      const body = encodeURIComponent(
+        '### 🔭 KleinSearch Configuration Update\n\nSubmit this issue to automatically apply your new search settings and trigger a cloud scan.\n\n```json\n' + jsonText + '\n```'
+      );
+      const issueUrl = 'https://github.com/HerrIves/KleinSearch/issues/new?title=' + title + '&body=' + body;
+      window.open(issueUrl, '_blank');
+      const stateEl = document.getElementById('saveState');
+      stateEl.className = 'save-state ok';
+      stateEl.textContent = 'Issue opened in new tab. Click "Submit new issue" on GitHub to apply!';
+    });
     document.getElementById('btnSettingsScan').addEventListener('click', () => document.getElementById('btnStartScan').click());
     document.getElementById('btnTestTelegram').addEventListener('click', async () => {
       const statusEl = document.getElementById('tgTestStatus');
@@ -836,7 +852,12 @@
       URL.revokeObjectURL(a.href);
     });
 
-    if (!HAS_APP) showNotice('Read-only view. Start the app with run.bat / run.sh to edit settings, scan and save notes.');
+    if (!HAS_APP) {
+      document.getElementById('btnSaveSettings').style.display = 'none';
+      document.getElementById('btnSyncGithub').style.display = 'none';
+      document.getElementById('btnUpdateIssue').style.display = 'inline-block';
+      showNotice('Web mode: Configure search profiles in Settings and click "Apply via GitHub Issue".');
+    }
     render();
   </script>
 </body>

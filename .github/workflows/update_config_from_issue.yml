@@ -1,0 +1,66 @@
+name: Update Config from Issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+jobs:
+  update-config:
+    name: Process Issue Config Update
+    runs-on: ubuntu-latest
+    if: github.event.issue.author_association == 'OWNER' || github.event.issue.user.login == github.repository_owner
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Parse and update config.json
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          printf '%s\n' "$ISSUE_BODY" > issue_body.txt
+          python src/update_config_from_issue.py issue_body.txt
+          rm -f issue_body.txt
+
+      - name: Commit and push updated config
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add config.json
+          if git diff --staged --quiet; then
+            echo "No changes to config.json."
+          else
+            git commit -m "chore: update search config from Issue #${{ github.event.issue.number }}"
+            git push
+          fi
+
+      - name: Close Issue and confirm
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue close "$ISSUE_NUMBER" --comment "✅ Search settings successfully updated from your issue! Starting a cloud scan now..."
+          gh workflow run scheduled_scan.yml || true
+
+  reject-unauthorized:
+    name: Reject Non-Owner Updates
+    runs-on: ubuntu-latest
+    if: github.event.issue.author_association != 'OWNER' && github.event.issue.user.login != github.repository_owner
+    steps:
+      - name: Close unauthorized issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue close "$ISSUE_NUMBER" --comment "⛔ Access denied: Only the repository owner can update search settings."
