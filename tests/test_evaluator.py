@@ -1,6 +1,6 @@
 import pytest
 
-from evaluator import evaluate_listing, make_search_url, parse_price_value
+from evaluator import evaluate_listing, make_search_url, parse_price_value, resolve_location_id
 
 PROFILE = {
     "name": "MacBook M1 Pro/Max 32GB",
@@ -97,17 +97,64 @@ def test_parse_price_value(text, value):
         ({"query": "x", "price_max": 150, "page": 2}, "https://www.kleinanzeigen.de/s-preis::150/seite:2/x/k0"),
         ({"query": "x", "price_min": 10}, "https://www.kleinanzeigen.de/s-preis:10:/x/k0"),
         ({"query": "über größe"}, "https://www.kleinanzeigen.de/s-%C3%BCber-gr%C3%B6%C3%9Fe/k0"),
-        ({"query": "macbook", "location": "Berlin"}, "https://www.kleinanzeigen.de/s-macbook/berlin/k0"),
-        ({"query": "macbook", "location": "10115", "radius": 20}, "https://www.kleinanzeigen.de/s-macbook/10115/k0r20"),
+        ({"query": "macbook", "location": "Berlin"}, "https://www.kleinanzeigen.de/s-macbook/k0l3331"),
+        ({"query": "macbook", "location": "10115", "radius": 20}, "https://www.kleinanzeigen.de/s-macbook/k0l9668r20"),
         (
             {"query": "macbook", "price_min": 300, "price_max": 1200, "category": "278", "location": "München", "radius": 50},
-            "https://www.kleinanzeigen.de/s-preis:300:1200/macbook/m%C3%BCnchen/k0c278r50",
+            "https://www.kleinanzeigen.de/s-preis:300:1200/macbook/k0c278l6411r50",
         ),
         (
             {"query": "fahrrad", "location": "Frankfurt am Main", "radius": 10},
-            "https://www.kleinanzeigen.de/s-fahrrad/frankfurt-am-main/k0r10",
+            "https://www.kleinanzeigen.de/s-fahrrad/k0l4292r10",
+        ),
+        (
+            {"query": "tv 55", "location": "59821", "radius": 200, "category": "175", "price_max": 50},
+            "https://www.kleinanzeigen.de/s-preis::50/tv-55/k0c175l1811r200",
+        ),
+        (
+            {"query": "tv 55", "location": "l1811", "radius": 200, "category": "175", "price_max": 50},
+            "https://www.kleinanzeigen.de/s-preis::50/tv-55/k0c175l1811r200",
         ),
     ],
 )
 def test_make_search_url(kwargs, url):
     assert make_search_url(**kwargs) == url
+
+
+def test_resolve_location_id_direct_id():
+    assert resolve_location_id("l1811") == "1811"
+    assert resolve_location_id("L3331") == "3331"
+
+
+def test_resolve_location_id_empty():
+    assert resolve_location_id("") is None
+    assert resolve_location_id("   ") is None
+
+
+def test_resolve_location_id_prepopulated():
+    assert resolve_location_id("59821") == "1811"
+    assert resolve_location_id("Arnsberg") == "1810"
+    assert resolve_location_id("Berlin") == "3331"
+
+
+def test_resolve_location_id_network_mock(monkeypatch):
+    from unittest.mock import MagicMock
+
+    fake_resp = MagicMock()
+    fake_resp.read.return_value = b'{"_0": "Deutschland", "_5555": "Teststadt"}'
+    fake_resp.__enter__.return_value = fake_resp
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda req, timeout=4.0: fake_resp)
+
+    res = resolve_location_id("NeueTeststadtXYZ")
+    assert res == "5555"
+
+
+def test_resolve_location_id_network_failure(monkeypatch):
+    def fake_fail(req, timeout=4.0):
+        raise OSError("Connection timed out")
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_fail)
+
+    res = resolve_location_id("UnknownFailingCity")
+    assert res is None

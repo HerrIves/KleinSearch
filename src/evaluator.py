@@ -1,12 +1,66 @@
 """Product-agnostic evaluation of listings against a search profile."""
+import json
 import re
 import urllib.parse
+import urllib.request
 from typing import Any, Dict, List, Optional
 
+from logger import logger
 from matcher import first_excluded, split_criteria
 from models import STATUS_MATCH, STATUS_PARTIAL, STATUS_REJECTED
 
 BASE_URL = "https://www.kleinanzeigen.de"
+LOCATION_ENDPOINT = "https://www.kleinanzeigen.de/s-ort-empfehlungen.json"
+
+_LOCATION_CACHE: Dict[str, Optional[str]] = {
+    "59821": "1811",
+    "arnsberg": "1810",
+    "berlin": "3331",
+    "10115": "9668",
+    "münchen": "6411",
+    "muenchen": "6411",
+    "frankfurt am main": "4292",
+    "köln": "945",
+    "koeln": "945",
+    "hamburg": "9409",
+}
+
+
+def resolve_location_id(location: str, timeout: float = 4.0) -> Optional[str]:
+    """Resolves a postal code, city name, or location string to a Kleinanzeigen location ID.
+
+    Uses Kleinanzeigen's s-ort-empfehlungen.json autocomplete endpoint.
+    Results are cached in-memory.
+    If location already looks like a location ID (e.g. 'l1811' or 'L3331'), the ID is extracted.
+    Returns None if location is empty or cannot be resolved.
+    """
+    if not location or not location.strip():
+        return None
+    loc_clean = location.strip()
+    if re.fullmatch(r"[lL]\d+", loc_clean):
+        return loc_clean[1:]
+
+    cache_key = loc_clean.lower()
+    if cache_key in _LOCATION_CACHE:
+        return _LOCATION_CACHE[cache_key]
+
+    url = f"{LOCATION_ENDPOINT}?query={urllib.parse.quote(loc_clean)}"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            loc_id = next((k.lstrip("_") for k in data.keys() if k != "_0" and k.startswith("_")), None)
+            _LOCATION_CACHE[cache_key] = loc_id
+            return loc_id
+    except Exception as e:
+        logger.debug(f"Failed to resolve location '{location}': {e}")
+        _LOCATION_CACHE[cache_key] = None
+        return None
+
+
+def clear_location_cache() -> None:
+    """Clears the location cache (useful in tests)."""
+    _LOCATION_CACHE.clear()
 
 
 def make_search_url(
@@ -21,7 +75,7 @@ def make_search_url(
     """Builds a Kleinanzeigen search URL.
 
     Format (verified against the live site):
-      /s-preis:<min>:<max>/seite:<n>/<query-slug>/<location-slug>/k0c<category>r<radius>
+      /s-preis:<min>:<max>/seite:<n>/<query-slug>/k0c<category>l<location_id>r<radius>
     """
     slug = urllib.parse.quote("-".join(query.lower().split()))
     segments = []
@@ -30,12 +84,13 @@ def make_search_url(
     if page > 1:
         segments.append(f"seite:{page}")
     segments.append(slug)
-    if location and location.strip():
-        loc_slug = urllib.parse.quote("-".join(location.strip().lower().split()))
-        segments.append(loc_slug)
+
+    loc_id = resolve_location_id(location) if location and location.strip() else None
+
     category_part = f"c{category}" if category else ""
+    loc_part = f"l{loc_id}" if loc_id else ""
     radius_part = f"r{radius}" if radius else ""
-    return f"{BASE_URL}/s-{'/'.join(segments)}/k0{category_part}{radius_part}"
+    return f"{BASE_URL}/s-{'/'.join(segments)}/k0{category_part}{loc_part}{radius_part}"
 
 
 _PRICE_RE = re.compile(r"\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?")
