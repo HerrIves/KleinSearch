@@ -214,3 +214,13 @@ def test_render_dashboard_includes_profile_tabs_and_notify_controls():
     assert 'data-f="radius"' in html
 
 
+def test_render_dashboard_mobile_table_layout():
+    from generate_dashboard import render_dashboard
+    html = render_dashboard([], {"profiles": []})
+    assert "-webkit-overflow-scrolling: touch" in html
+    assert "overflow-wrap: break-word" in html
+    assert "min-width: 280px" in html
+    assert "table-scroll-hint" in html
+
+
+

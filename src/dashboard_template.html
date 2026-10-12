@@ -30,7 +30,21 @@
       padding: 24px;
       line-height: 1.5;
     }
-    .container { max-width: 1480px; margin: 0 auto; }
+    .container { max-width: 1480px; margin: 0 auto; width: 100%; min-width: 0; }
+    @media (max-width: 640px) {
+      body { padding: 12px 8px; }
+      header { margin-bottom: 16px; padding-bottom: 12px; }
+      h1 { font-size: 1.35rem; }
+      .header-top { gap: 8px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+      .stat-card { padding: 12px 14px; }
+      .stat-value { font-size: 1.4rem; }
+      .controls { padding: 10px 12px; gap: 10px; margin-bottom: 14px; }
+      .search-box { min-width: 100%; }
+      .filter-pills { width: 100%; justify-content: flex-start; }
+      .extra-controls { width: 100%; justify-content: space-between; }
+      .sort-select { flex: 1; min-width: 120px; }
+    }
     header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--surface-border); }
     .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     h1 { font-size: 1.75rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }
@@ -170,17 +184,53 @@
     }
 
     /* Table */
-    .table-container {
-      width: 100%; background: var(--surface); border: 1px solid var(--surface-border);
-      border-radius: var(--radius); overflow-x: auto; box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+    .table-scroll-hint {
+      display: none;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      padding: 0 4px;
+      user-select: none;
     }
-    .listings-table { width: 100%; min-width: 1200px; table-layout: fixed; border-collapse: collapse; text-align: left; font-size: 0.92rem; }
+    @media (max-width: 900px) {
+      .table-scroll-hint {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+    }
+
+    .table-container {
+      width: 100%;
+      max-width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+    .listings-table {
+      width: max-content;
+      min-width: 1420px;
+      table-layout: fixed;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.92rem;
+    }
     .listings-table th {
       background: #101726; color: var(--text-muted); padding: 14px; font-weight: 600; font-size: 0.8rem;
       text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--surface-border);
       position: sticky; top: 0; z-index: 5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      box-sizing: border-box;
     }
-    .listings-table td { padding: 12px 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); vertical-align: middle; overflow: hidden; }
+    .listings-table td {
+      padding: 12px 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      vertical-align: middle; overflow: hidden; box-sizing: border-box;
+    }
     .listings-table tbody tr { transition: background 0.15s; }
     .listings-table tbody tr:hover { background: rgba(255, 255, 255, 0.035); }
     .listings-table tbody tr.row-match { background: rgba(16, 185, 129, 0.06); }
@@ -196,7 +246,14 @@
     .badge-partial { background: var(--potential-bg); color: var(--potential); border: 1px solid var(--potential-border); }
     .score { display: block; margin-top: 4px; color: var(--text-muted); font-size: 0.75rem; }
 
-    .title-cell { font-weight: 600; color: #fff; line-height: 1.4; word-break: break-word; }
+    .title-cell {
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.4;
+      word-break: normal;
+      overflow-wrap: break-word;
+      min-width: 280px;
+    }
     .title-link { color: #f1f5f9; text-decoration: none; transition: color 0.15s; }
     .title-link:hover { color: var(--accent); text-decoration: underline; }
     .desc { display: block; margin-top: 4px; color: #64748b; font-weight: 400; font-size: 0.8rem; line-height: 1.35;
@@ -377,19 +434,24 @@
       </div>
     </div>
 
+    <div class="table-scroll-hint">
+      <span>👈 Swipe horizontally to view all columns 👉</span>
+      <span style="font-size: 0.72rem; color: #64748b;">(horizontal scroll)</span>
+    </div>
+
     <div class="table-container">
       <table class="listings-table">
         <thead>
           <tr>
-            <th style="width: 120px;">Status</th>
-            <th>Title</th>
-            <th style="width: 110px;">Price</th>
-            <th style="width: 210px;">Criteria</th>
-            <th style="width: 150px;">Location 📍</th>
-            <th style="width: 120px;">Shipping 📦</th>
-            <th style="width: 120px;">Date</th>
-            <th style="width: 240px;">Note ✏️</th>
-            <th style="width: 90px; text-align: center;">Open</th>
+            <th style="width: 130px; min-width: 130px;">Status</th>
+            <th style="width: 360px; min-width: 280px;">Title</th>
+            <th style="width: 110px; min-width: 110px;">Price</th>
+            <th style="width: 220px; min-width: 200px;">Criteria</th>
+            <th style="width: 160px; min-width: 150px;">Location 📍</th>
+            <th style="width: 120px; min-width: 120px;">Shipping 📦</th>
+            <th style="width: 130px; min-width: 120px;">Date</th>
+            <th style="width: 240px; min-width: 220px;">Note ✏️</th>
+            <th style="width: 90px; min-width: 90px; text-align: center;">Open</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
