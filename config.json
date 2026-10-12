@@ -55,11 +55,11 @@
       "pages": 2,
       "category": "175",
       "location": "59821",
-      "radius": 100,
+      "radius": 200,
       "must_have": [
-        "60 zoll | 60\"",
-        "65 zoll | 65\"",
-        "70 zoll | 70\""
+        "60 zoll | 60",
+        "65 zoll | 65",
+        "70 zoll | 70"
       ],
       "exclude": [
         "defekt"
