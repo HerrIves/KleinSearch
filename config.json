@@ -11,8 +11,7 @@
     "bot_token": "",
     "chat_id": "1175147457",
     "notify_on": [
-      "MATCH",
-      "PARTIAL"
+      "MATCH"
     ]
   },
   "profiles": [
@@ -28,8 +27,9 @@
       "price_max": 800,
       "pages": 3,
       "category": "",
+      "location": "",
+      "radius": null,
       "must_have": [
-        "16gb | 16 gb",
         "32gb | 32 gb",
         "48gb | 48 gb",
         "64gb | 64 gb"
@@ -53,6 +53,8 @@
       "price_max": 50,
       "pages": 2,
       "category": "175",
+      "location": "",
+      "radius": null,
       "must_have": [],
       "exclude": [
         "defekt"
