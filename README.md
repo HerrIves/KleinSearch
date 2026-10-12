@@ -2,6 +2,7 @@
 
 A powerful, headless, profile-driven scraping engine and local dashboard for monitoring items on Kleinanzeigen (formerly eBay Kleinanzeigen).
 
+[![Live Dashboard](https://img.shields.io/badge/GitHub_Pages-Live_Dashboard-success?logo=github)](https://herrives.github.io/KleinSearch/)
 ![KleinSearch Dashboard](https://img.shields.io/badge/UI-Interactive_Dashboard-0ea5e9)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 [![CI](https://github.com/HerrIves/KleinSearch/actions/workflows/ci.yml/badge.svg)](https://github.com/HerrIves/KleinSearch/actions/workflows/ci.yml)
@@ -12,15 +13,17 @@ A powerful, headless, profile-driven scraping engine and local dashboard for mon
 ## ✨ Features
 
 - **Profile-Driven Engine:** Create multiple search profiles (e.g., "MacBook M1 32GB", "ThinkPad T14").
+- **Quick Profile Tabs:** Switch between searches in 1 click using visual bookmark tabs with real-time counters.
 - **Smart Filtering:** 
   - **Must-have** criteria (supports aliases via `|`, e.g., `m1 pro|m1 max`).
   - **Exclusion** keywords (globally or per-profile) to instantly filter out irrelevant or broken items.
   - Custom price ranges (`Price from` / `Price to`).
-- **Interactive UI Dashboard:** A fully local HTML/CSS/JS frontend to view, sort, and manage your findings.
+- **Interactive UI Dashboard:** A fully local or hosted HTML/CSS/JS frontend to view, sort, and manage your findings.
 - **Stealth & Headless:** Runs under the hood using Playwright in headless mode, maintaining persistent browser profiles to avoid bot detection.
 - **Local Storage:** All your data remains private and stored in standard `.csv` files.
 - **Smart Reevaluation:** Whenever you update your profile rules (like adding an exclusion word), the local database is automatically cleaned up.
-- **Telegram Notifications:** Instant alerts sent to your Telegram chat as soon as new matching ads are detected (with built-in deduplication).
+- **Flexible Telegram Alerts:** Instant notifications for exact matches (`MATCH`) or partial matches with at least 1 criterion met (`PARTIAL`), with built-in deduplication.
+- **Zero-Token Cloud Management:** Safely update search profiles from your phone via pre-filled GitHub Issues with strict repository owner validation.
 - **Docker Ready:** 1-click deployment with `docker-compose` for 24/7 autonomous monitoring on a VPS or home server.
 
 ## 🚀 Quick Start (Local Desktop)
@@ -98,6 +101,7 @@ In your forked repository:
 1. Click the **Actions** tab in your repository.
 2. Click **"I understand my workflows, go ahead and enable them"**.
 3. Under **Workflows** on the left, select **Scheduled Scan** and click **Run workflow** to test it immediately.
+4. The scan will automatically execute every 3 hours (at minute 20 past the hour) in the background and send Telegram alerts whenever new listings appear.
 
 ### 4. Manage Your Search Queries
 You can adjust what the cloud bot searches for in three easy ways:

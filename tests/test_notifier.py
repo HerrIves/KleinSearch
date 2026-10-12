@@ -143,3 +143,28 @@ def test_test_telegram_connection(mock_send):
     assert ok is True
     assert msg == "OK"
     assert "Test" in mock_send.call_args[0][2]
+
+
+@patch("notifier.send_telegram_message")
+def test_notify_listings_partial_requires_at_least_one_matched(mock_send, tmp_path):
+    mock_send.return_value = (True, "OK")
+    path = str(tmp_path / "notified.json")
+
+    # Has 1 criterion matched
+    ad_with_match = Listing(id="1", status="PARTIAL", title="MacBook 1", link="https://x/1", matched=["32gb"], missing=["m1 max"])
+    # Has 0 criteria matched
+    ad_zero_match = Listing(id="2", status="PARTIAL", title="MacBook 2", link="https://x/2", matched=[], missing=["32gb"])
+
+    settings = {
+        "telegram": {
+            "enabled": True,
+            "bot_token": "token123",
+            "chat_id": "chat123",
+            "notify_on": ["MATCH", "PARTIAL"],
+        }
+    }
+
+    sent = notifier.notify_listings([ad_with_match, ad_zero_match], settings, path=path)
+    assert sent == 1
+    assert mock_send.call_count == 1
+    assert "MacBook 1" in mock_send.call_args[0][2]

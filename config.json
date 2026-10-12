@@ -11,7 +11,8 @@
     "bot_token": "",
     "chat_id": "",
     "notify_on": [
-      "MATCH"
+      "MATCH",
+      "PARTIAL"
     ]
   },
   "profiles": [
