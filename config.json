@@ -9,7 +9,7 @@
   "telegram": {
     "enabled": true,
     "bot_token": "",
-    "chat_id": "",
+    "chat_id": "1175147457",
     "notify_on": [
       "MATCH"
     ]
@@ -19,6 +19,7 @@
       "name": "apple",
       "enabled": true,
       "queries": [
+        "apple m2",
         "apple m4",
         "apple m5"
       ],
