@@ -47,7 +47,8 @@
       "enabled": true,
       "queries": [
         "Tv",
-        "Fernseher"
+        "Fernseher",
+        "Display"
       ],
       "price_min": null,
       "price_max": 100,
