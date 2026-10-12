@@ -104,6 +104,13 @@ You can adjust what the cloud bot searches for in two easy ways:
 - **Via Local Dashboard:** Launch `run.bat`, adjust your search profiles, and click **`☁️ Sync to GitHub`** in Settings.
 - **Via GitHub Web:** Open `config.json` in your repository, click the ✏️ (Edit) icon, change your search terms, and commit.
 
+### 5. Live Mobile Dashboard (GitHub Pages)
+View your interactive listings dashboard from your phone or browser anytime:
+1. In your repository, go to **Settings** ➔ **Pages**.
+2. Under **Build and deployment** ➔ **Source**, select **GitHub Actions**.
+3. After the next scheduled scan, your live dashboard will be published at:
+   `https://<your-username>.github.io/KleinSearch/`
+
 ---
 
 ## 🛠️ Tech Stack

@@ -187,3 +187,18 @@ class TestParseNumericPrice:
 
     def test_no_price_string(self):
         assert parse_numeric_price("Price not specified") == 9999.0
+
+
+def test_render_dashboard_sanitizes_telegram_token():
+    from generate_dashboard import render_dashboard
+    settings = {
+        "profiles": [],
+        "telegram": {
+            "enabled": True,
+            "bot_token": "SUPER_SECRET_TOKEN_12345",
+            "chat_id": "1175147457",
+        },
+    }
+    html = render_dashboard([], settings)
+    assert "SUPER_SECRET_TOKEN_12345" not in html
+    assert '"bot_token": ""' in html

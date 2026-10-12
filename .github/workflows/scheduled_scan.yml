@@ -6,6 +6,11 @@ on:
     - cron: '0 */3 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 concurrency:
   group: scheduled-scan
   cancel-in-progress: false
@@ -54,3 +59,25 @@ jobs:
           name: scanner-log
           path: data/scanner.log
           if-no-files-found: ignore
+
+      - name: Prepare dashboard for GitHub Pages
+        if: success()
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+
+      - name: Setup Pages
+        if: success()
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: success()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+      - name: Deploy to GitHub Pages
+        if: success()
+        id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true

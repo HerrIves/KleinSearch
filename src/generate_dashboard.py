@@ -3,6 +3,7 @@ import json
 import os
 import re
 import sys
+import copy
 from datetime import datetime
 from typing import Any, Dict, Optional
 
@@ -30,9 +31,16 @@ def _json_for_script(value: Any) -> str:
 def render_dashboard(listings: list, settings: Dict[str, Any], generated_at: Optional[str] = None) -> str:
     with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
         html = f.read()
+
+    # Never leak telegram bot_token into generated HTML (crucial for GitHub Pages / public dashboards)
+    safe_settings = copy.deepcopy(settings)
+    if "telegram" in safe_settings and isinstance(safe_settings["telegram"], dict):
+        safe_settings["telegram"] = dict(safe_settings["telegram"])
+        safe_settings["telegram"]["bot_token"] = ""
+
     for_placeholder = {
         "__DATA_JSON__": _json_for_script(listings),
-        "__SETTINGS_JSON__": _json_for_script(settings),
+        "__SETTINGS_JSON__": _json_for_script(safe_settings),
         "__CSV_FIELDS_JSON__": _json_for_script(CSV_FIELDS),
         "__GENERATED_AT__": generated_at or datetime.now().strftime("%Y-%m-%d %H:%M"),
     }
