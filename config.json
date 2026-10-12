@@ -11,7 +11,8 @@
     "bot_token": "",
     "chat_id": "1175147457",
     "notify_on": [
-      "MATCH"
+      "MATCH",
+      "PARTIAL"
     ]
   },
   "profiles": [
@@ -45,9 +46,8 @@
       "name": "tv",
       "enabled": true,
       "queries": [
-        "60 zoll",
-        "65 zoll",
-        "70 zoll"
+        "Tv",
+        "Fernseher"
       ],
       "price_min": null,
       "price_max": 100,
@@ -55,7 +55,11 @@
       "category": "175",
       "location": "59821",
       "radius": 100,
-      "must_have": [],
+      "must_have": [
+        "60 zoll",
+        "65 zoll",
+        "70 zoll"
+      ],
       "exclude": [
         "defekt"
       ]
