@@ -45,8 +45,9 @@
       "name": "tv",
       "enabled": true,
       "queries": [
-        "tv 65",
-        "tv 70"
+        "60 zoll",
+        "65 zoll",
+        "70 zoll"
       ],
       "price_min": null,
       "price_max": 100,
