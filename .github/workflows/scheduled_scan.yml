@@ -2,8 +2,8 @@ name: Scheduled Scan
 
 on:
   schedule:
-    # Run every 3 hours
-    - cron: '0 */3 * * *'
+    # Run every 3 hours at minute 20 (avoids top-of-hour congestion)
+    - cron: '20 */3 * * *'
   workflow_dispatch:
 
 permissions:
