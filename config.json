@@ -46,9 +46,7 @@
       "name": "tv",
       "enabled": true,
       "queries": [
-        "Tv",
-        "Fernseher",
-        "Display"
+        "Fernseher"
       ],
       "price_min": null,
       "price_max": 100,
