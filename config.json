@@ -46,18 +46,18 @@
       "name": "tv",
       "enabled": true,
       "queries": [
-        "60",
-        "65",
-        "70"
+        "Fernseher"
       ],
       "price_min": null,
       "price_max": 100,
       "pages": 2,
       "category": "175",
       "location": "59821",
-      "radius": 200,
+      "radius": 100,
       "must_have": [
-        "Fernseher"
+        "60",
+        "65",
+        "70"
       ],
       "exclude": [
         "defekt"
