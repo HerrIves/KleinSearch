@@ -12,6 +12,9 @@ from models import STATUS_MATCH, STATUS_PARTIAL, STATUS_REJECTED
 BASE_URL = "https://www.kleinanzeigen.de"
 LOCATION_ENDPOINT = "https://www.kleinanzeigen.de/s-ort-empfehlungen.json"
 
+# Radius steps offered by the Kleinanzeigen search form (values in between are not reliable).
+ALLOWED_RADII = (5, 10, 20, 30, 50, 100, 150, 200)
+
 _LOCATION_CACHE: Dict[str, Optional[str]] = {
     "59821": "1811",
     "arnsberg": "1810",
@@ -26,11 +29,23 @@ _LOCATION_CACHE: Dict[str, Optional[str]] = {
 }
 
 
+class LocationNotResolved(ValueError):
+    """A search location was requested but could not be turned into a Kleinanzeigen location id.
+
+    Building the URL anyway would silently search all of Germany."""
+
+
+def snap_radius(radius: int) -> int:
+    """Smallest radius offered by the site that is >= `radius` (capped at the largest)."""
+    return next((r for r in ALLOWED_RADII if r >= radius), ALLOWED_RADII[-1])
+
+
 def resolve_location_id(location: str, timeout: float = 4.0) -> Optional[str]:
     """Resolves a postal code, city name, or location string to a Kleinanzeigen location ID.
 
     Uses Kleinanzeigen's s-ort-empfehlungen.json autocomplete endpoint.
-    Results are cached in-memory.
+    Successful results are cached in-memory; failures are not, so a temporary network
+    problem does not poison the rest of the run.
     If location already looks like a location ID (e.g. 'l1811' or 'L3331'), the ID is extracted.
     Returns None if location is empty or cannot be resolved.
     """
@@ -50,11 +65,11 @@ def resolve_location_id(location: str, timeout: float = 4.0) -> Optional[str]:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             loc_id = next((k.lstrip("_") for k in data.keys() if k != "_0" and k.startswith("_")), None)
-            _LOCATION_CACHE[cache_key] = loc_id
+            if loc_id:
+                _LOCATION_CACHE[cache_key] = loc_id
             return loc_id
     except Exception as e:
         logger.debug(f"Failed to resolve location '{location}': {e}")
-        _LOCATION_CACHE[cache_key] = None
         return None
 
 
@@ -76,6 +91,10 @@ def make_search_url(
 
     Format (verified against the live site):
       /s-preis:<min>:<max>/seite:<n>/<query-slug>/k0c<category>l<location_id>r<radius>
+
+    Raises LocationNotResolved if a location is given but cannot be resolved (instead of
+    quietly dropping it and searching all of Germany). The radius is only used together with
+    a location and is rounded up to a step the site offers.
     """
     slug = urllib.parse.quote("-".join(query.lower().split()))
     segments = []
@@ -85,11 +104,18 @@ def make_search_url(
         segments.append(f"seite:{page}")
     segments.append(slug)
 
-    loc_id = resolve_location_id(location) if location and location.strip() else None
+    if radius and not (location and location.strip()):
+        raise LocationNotResolved("Search radius requires a city or postal code")
+
+    loc_id = None
+    if location and location.strip():
+        loc_id = resolve_location_id(location)
+        if not loc_id:
+            raise LocationNotResolved(f"Cannot resolve location '{location}'")
 
     category_part = f"c{category}" if category else ""
     loc_part = f"l{loc_id}" if loc_id else ""
-    radius_part = f"r{radius}" if radius else ""
+    radius_part = f"r{snap_radius(radius)}" if (radius and loc_id) else ""
     return f"{BASE_URL}/s-{'/'.join(segments)}/k0{category_part}{loc_part}{radius_part}"
 
 

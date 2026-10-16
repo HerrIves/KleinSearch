@@ -6,7 +6,7 @@ from typing import Awaitable, Callable, Dict, List, Optional
 
 from bs4 import BeautifulSoup
 
-from evaluator import BASE_URL, make_search_url
+from evaluator import BASE_URL, LocationNotResolved, make_search_url
 from logger import logger
 from models import NO_PRICE, SHIPPING_NO, SHIPPING_YES, UNKNOWN_LOCATION
 
@@ -132,15 +132,20 @@ async def scan_query(
     for page_num in range(1, pages + 1):
         if on_page:
             await on_page(page_num, pages)
-        url = make_search_url(
-            query,
-            price_min,
-            price_max,
-            category,
-            page=page_num,
-            location=location,
-            radius=radius,
-        )
+        try:
+            url = make_search_url(
+                query,
+                price_min,
+                price_max,
+                category,
+                page=page_num,
+                location=location,
+                radius=radius,
+            )
+        except LocationNotResolved as e:
+            # Searching without the location would return ads from all of Germany.
+            logger.error(f"  {e}. Skipping this query instead of searching nationwide.")
+            break
         try:
             results = await scan_url(page, url)
         except Exception as e:

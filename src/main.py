@@ -7,6 +7,7 @@
 """
 import asyncio
 import copy
+import json
 import os
 import random
 import subprocess
@@ -85,6 +86,7 @@ async def run_scan(page, settings: Dict[str, Any], progress: ProgressFn = _no_pr
         )
         for item in raw:
             result = evaluate_listing(item, profile, global_exclude)
+            result["location_scope"] = json.dumps([profile.get("location", "").strip().casefold(), profile.get("radius") or None], ensure_ascii=False)
             key = str(result.get("id") or result.get("link"))
             previous = found.get(key)
             # the same ad can appear for several queries/profiles: keep the best evaluation
