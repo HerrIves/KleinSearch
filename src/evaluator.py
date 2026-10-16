@@ -50,11 +50,11 @@ def resolve_location_id(location: str, timeout: float = 4.0) -> Optional[str]:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             loc_id = next((k.lstrip("_") for k in data.keys() if k != "_0" and k.startswith("_")), None)
-            _LOCATION_CACHE[cache_key] = loc_id
+            if loc_id is not None:
+                _LOCATION_CACHE[cache_key] = loc_id
             return loc_id
     except Exception as e:
         logger.debug(f"Failed to resolve location '{location}': {e}")
-        _LOCATION_CACHE[cache_key] = None
         return None
 
 
@@ -85,7 +85,11 @@ def make_search_url(
         segments.append(f"seite:{page}")
     segments.append(slug)
 
+    if radius and not location.strip():
+        raise ValueError("Search radius requires a city or postal code")
     loc_id = resolve_location_id(location) if location and location.strip() else None
+    if location.strip() and not loc_id:
+        raise ValueError(f"Cannot resolve search location: {location!r}")
 
     category_part = f"c{category}" if category else ""
     loc_part = f"l{loc_id}" if loc_id else ""

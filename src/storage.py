@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from config import CSV_DATABASE_PATH
 from evaluator import evaluate_listing
+import json
 from logger import logger
 from models import (
     CSV_FIELDS,
@@ -124,6 +125,11 @@ def reevaluate(settings: Dict[str, Any], path: str = CSV_DATABASE_PATH) -> Tuple
         profile = profiles.get(listing.profile)
         if not profile:
             kept.append(listing)
+            continue
+        expected_scope = json.dumps([profile.get("location", "").strip().casefold(), profile.get("radius") or None], ensure_ascii=False)
+        if listing.location_scope != expected_scope and not (not listing.location_scope and not profile.get("location") and not profile.get("radius")):
+            removed += 1
+            logger.info(f"  removed: {listing.title} (search location/radius changed)")
             continue
         result = evaluate_listing(listing.to_dict(), profile, global_exclude)
         if result["status"] == STATUS_REJECTED:
