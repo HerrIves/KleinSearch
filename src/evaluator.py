@@ -50,11 +50,11 @@ def resolve_location_id(location: str, timeout: float = 4.0) -> Optional[str]:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             loc_id = next((k.lstrip("_") for k in data.keys() if k != "_0" and k.startswith("_")), None)
-            _LOCATION_CACHE[cache_key] = loc_id
+            if loc_id is not None:
+                _LOCATION_CACHE[cache_key] = loc_id
             return loc_id
     except Exception as e:
         logger.debug(f"Failed to resolve location '{location}': {e}")
-        _LOCATION_CACHE[cache_key] = None
         return None
 
 
