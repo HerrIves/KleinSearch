@@ -127,7 +127,7 @@ def reevaluate(settings: Dict[str, Any], path: str = CSV_DATABASE_PATH) -> Tuple
             kept.append(listing)
             continue
         expected_scope = json.dumps([profile.get("location", "").strip().casefold(), profile.get("radius") or None], ensure_ascii=False)
-        if listing.location_scope != expected_scope:
+        if listing.location_scope != expected_scope and not (not listing.location_scope and not profile.get("location") and not profile.get("radius")):
             removed += 1
             logger.info(f"  removed: {listing.title} (search location/radius changed)")
             continue
