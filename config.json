@@ -55,12 +55,11 @@
       "location": "59821",
       "radius": 10,
       "must_have": [
-        "60",
-        "65",
-        "70"
+        "60 | 65 | 70"
       ],
       "exclude": [
-        "defekt"
+        "defekt",
+        "Board"
       ]
     }
   ]
