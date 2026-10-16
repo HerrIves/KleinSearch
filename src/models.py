@@ -17,6 +17,7 @@ CSV_FIELDS = [
     "added_at",
     "status",
     "profile",
+    "location_scope",
     "title",
     "price",
     "location",
@@ -51,6 +52,7 @@ class Listing:
     posted: str = ""
     link: str = ""
     profile: str = ""
+    location_scope: str = ""
     status: str = ""
     matched: List[str] = field(default_factory=list)
     missing: List[str] = field(default_factory=list)
