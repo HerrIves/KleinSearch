@@ -52,10 +52,11 @@
         "OnePlus Nord 3 5G",
         "OnePlus 11",
         "POCO F5 Pro",
-        "POCO F6"
+        "POCO F6",
+        "pixel"
       ],
       "price_min": 30,
-      "price_max": 120,
+      "price_max": 200,
       "pages": 3,
       "category": "273",
       "location": "",
