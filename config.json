@@ -54,14 +54,16 @@
         "POCO F5 Pro",
         "POCO F6"
       ],
-      "price_min": 50,
-      "price_max": 300,
+      "price_min": 30,
+      "price_max": 120,
       "pages": 3,
-      "category": "",
+      "category": "273",
       "location": "",
       "radius": null,
       "must_have": [],
-      "exclude": []
+      "exclude": [
+        "Buds"
+      ]
     }
   ]
 }
