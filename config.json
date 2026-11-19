@@ -43,24 +43,25 @@
       ]
     },
     {
-      "name": "tv",
+      "name": "Handy",
       "enabled": true,
       "queries": [
-        "Fernseher"
+        "OnePlus Ace 2 Pro",
+        "OnePlus Ace 3 Pro",
+        "OnePlus 10T",
+        "OnePlus Nord 3 5G",
+        "OnePlus 11",
+        "POCO F5 Pro",
+        "POCO F6"
       ],
-      "price_min": null,
-      "price_max": 100,
-      "pages": 2,
-      "category": "175",
-      "location": "59821",
-      "radius": 10,
-      "must_have": [
-        "60 | 65 | 70"
-      ],
-      "exclude": [
-        "defekt",
-        "Board"
-      ]
+      "price_min": 50,
+      "price_max": 300,
+      "pages": 3,
+      "category": "",
+      "location": "",
+      "radius": null,
+      "must_have": [],
+      "exclude": []
     }
   ]
 }
