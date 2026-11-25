@@ -53,7 +53,9 @@
         "OnePlus 11",
         "POCO F5 Pro",
         "POCO F6",
-        "pixel"
+        "RedMagic 6 Pro",
+        "Lenovo Legion Duel 2",
+        "ROG Phone 5s"
       ],
       "price_min": 30,
       "price_max": 200,
@@ -61,7 +63,10 @@
       "category": "273",
       "location": "",
       "radius": null,
-      "must_have": [],
+      "must_have": [
+        "Bildschirm kaputt | defekt Display | Ersatzteilspender",
+        "16 | 24"
+      ],
       "exclude": [
         "Buds"
       ]
